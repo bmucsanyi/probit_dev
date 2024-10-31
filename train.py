@@ -172,7 +172,7 @@ def setup_scheduler(optimizer, train_loader, args):
         if args.rank == 0:
             logger.info(f"Scheduled epochs: {num_epochs}.")
             logger.info(
-                f'LR stepped per {"epoch" if lr_scheduler.t_in_epochs else "update"}.'
+                f"LR stepped per {'epoch' if lr_scheduler.t_in_epochs else 'update'}."
             )
 
     return lr_scheduler, num_epochs
@@ -195,7 +195,7 @@ def train(
     best_eval_metric = -float("inf")
     best_eval_metrics = None
     best_epoch = None
-    eval_metric = "top_1_accuracy"
+    eval_metric = "val_loss"
 
     for epoch in range(num_epochs):
         time_start_epoch = time.perf_counter()
@@ -257,16 +257,14 @@ def train(
         else:
             # Add placeholder value for [Linearized]SWAGWrapper: this method does not
             # support plateau-based LR scheduling
-            eval_metrics = {"top_1_accuracy": 1.0}
+            eval_metrics = {"val_top_1_accuracy": 1.0, "val_loss": 0.0}
 
         if lr_scheduler is not None:
             # Step LR for next epoch
-            lr_scheduler.step(epoch + 1, eval_metrics["top_1_accuracy"])
+            lr_scheduler.step(epoch + 1, eval_metrics[eval_metric])
 
         time_end_epoch = time.perf_counter()
-        logger.info(
-            f"Epoch {epoch} took " f"{time_end_epoch - time_start_epoch} seconds."
-        )
+        logger.info(f"Epoch {epoch} took {time_end_epoch - time_start_epoch} seconds.")
 
     return best_eval_metric, best_epoch
 
@@ -329,7 +327,7 @@ def test(
         )
 
     time_end_test = time.perf_counter()
-    logger.info(f"Tests took " f"{time_end_test - time_start_test} seconds.")
+    logger.info(f"Tests took {time_end_test - time_start_test} seconds.")
 
 
 def main():
@@ -621,7 +619,9 @@ def create_datasets(args, data_config):
 
     dataset_locations_ood_test = {}
     for severity in args.severities:
-        dataset_locations_ood_test[f"{args.dataset_id}S{severity}"] = args.data_dir_id
+        dataset_locations_ood_test[
+            f"{args.dataset_id.replace('/', '_')}_s{severity}"
+        ] = args.data_dir_id
 
     id_test_dataset = create_dataset(
         name=args.dataset_id,
@@ -650,33 +650,30 @@ def create_datasets(args, data_config):
 
     ood_test_datasets = {}
     for name, location in dataset_locations_ood_test.items():
-        ood_test_datasets[name] = {}
-
-        for ood_transform_type in args.ood_transforms_test:
-            ood_test_datasets[name][ood_transform_type] = create_dataset(
-                name=name[:-2],
-                root=location,
-                label_root=args.soft_imagenet_label_dir,
-                split=args.test_split,
-                download=args.dataset_download,
-                seed=args.seed,
-                subset=1.0,
-                input_size=data_config["input_size"],
-                padding=args.padding,
-                is_training_dataset=False,
-                use_prefetcher=args.prefetcher,
-                scale=args.scale,
-                ratio=args.ratio,
-                hflip=args.hflip,
-                color_jitter=args.color_jitter,
-                interpolation=data_config["interpolation"],
-                mean=data_config["mean"],
-                std=data_config["std"],
-                crop_pct=data_config["crop_pct"],
-                ood_transform_type=ood_transform_type,
-                severity=int(name[-1]),
-                convert_soft_labels_to_hard=False,
-            )
+        ood_test_datasets[name] = create_dataset(
+            name=name[:-2],
+            root=location,
+            label_root=args.soft_imagenet_label_dir,
+            split=args.test_split,
+            download=args.dataset_download,
+            seed=args.seed,
+            subset=1.0,
+            input_size=data_config["input_size"],
+            padding=args.padding,
+            is_training_dataset=False,
+            use_prefetcher=args.prefetcher,
+            scale=args.scale,
+            ratio=args.ratio,
+            hflip=args.hflip,
+            color_jitter=args.color_jitter,
+            interpolation=data_config["interpolation"],
+            mean=data_config["mean"],
+            std=data_config["std"],
+            crop_pct=data_config["crop_pct"],
+            ood_transform_type=args.ood_transforms_test,
+            severity=int(name[-1]),
+            convert_soft_labels_to_hard=False,
+        )
 
     return (
         train_dataset,
@@ -753,23 +750,20 @@ def create_loaders(args, data_config, device):
     )
 
     ood_test_loaders = {}
-    for name, dataset_subset in ood_test_datasets.items():
-        ood_test_loaders[name] = {}
-
-        for ood_transform_type, dataset in dataset_subset.items():
-            ood_test_loaders[name][ood_transform_type] = create_loader(
-                dataset=dataset,
-                batch_size=args.validation_batch_size or args.batch_size,
-                is_training_dataset=False,
-                use_prefetcher=args.prefetcher,
-                mean=data_config["mean"],
-                std=data_config["std"],
-                num_workers=args.num_eval_workers,
-                pin_memory=args.pin_memory,
-                persistent_workers=False,
-                device=device,
-                distributed=False,
-            )
+    for name, dataset in ood_test_datasets.items():
+        ood_test_loaders[name] = create_loader(
+            dataset=dataset,
+            batch_size=args.validation_batch_size or args.batch_size,
+            is_training_dataset=False,
+            use_prefetcher=args.prefetcher,
+            mean=data_config["mean"],
+            std=data_config["std"],
+            num_workers=args.num_eval_workers,
+            pin_memory=args.pin_memory,
+            persistent_workers=False,
+            device=device,
+            distributed=False,
+        )
 
     return (
         train_loader,

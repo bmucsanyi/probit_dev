@@ -56,32 +56,29 @@ def evaluate_bulk(
 ):
     metrics = {}
 
-    for name, loader_subset in loaders.items():
-        metrics[name] = {}
-        for ood_transform_type, loader in loader_subset.items():
-            logger.info(f"Evaluating {name} - {ood_transform_type}...")
-            time_eval_start = time.perf_counter()
+    for name, loader in loaders.items():
+        logger.info(f"Evaluating {name} - varied transforms...")
+        time_eval_start = time.perf_counter()
 
-            metrics[name][ood_transform_type] = evaluate(
-                model=model,
-                loader=loader,
-                device=device,
-                storage_device=storage_device,
-                amp_autocast=amp_autocast,
-                key_prefix="",
-                is_upstream_dataset=is_upstream_dataset,
-                is_soft_dataset=is_soft_dataset,
-                args=args,
-            )
+        metrics[name] = evaluate(
+            model=model,
+            loader=loader,
+            device=device,
+            storage_device=storage_device,
+            amp_autocast=amp_autocast,
+            key_prefix="",
+            is_upstream_dataset=is_upstream_dataset,
+            is_soft_dataset=is_soft_dataset,
+            args=args,
+        )
 
-            time_eval_end = time.perf_counter()
-            time_eval = time_eval_end - time_eval_start
+        time_eval_end = time.perf_counter()
+        time_eval = time_eval_end - time_eval_start
 
-            logger.info(
-                f"Finished evaluating {name} - {ood_transform_type}. "
-                f"Took {time_eval:.2f} seconds."
-            )
-        add_average(metrics[name])
+        logger.info(
+            f"Finished evaluating {name} - varied transforms. "
+            f"Took {time_eval:.2f} seconds."
+        )
 
     # Summarize results
     flattened_metrics = flatten(results=metrics, key_prefix=key_prefix)
@@ -93,28 +90,14 @@ def evaluate_bulk(
     return flattened_metrics
 
 
-def add_average(results):
-    # Summarize results
-    avg_results = {}
-    first_loader_results = results[next(iter(results.keys()))]
-    for key in first_loader_results:
-        if isinstance(first_loader_results[key], Number):
-            result_vector = torch.tensor([
-                loader_result[key] for _, loader_result in results.items()
-            ])
-            avg_results[key] = result_vector.mean().item()
-    results["avg"] = avg_results
-
-
 def flatten(results, key_prefix):
     # Flatten output
     flattened_results = {}
     for name, results_subset in results.items():
-        for ood_transform_type, results_subsubset in results_subset.items():
-            for key, value in results_subsubset.items():
-                flattened_results[f"{key_prefix}_{name}_{ood_transform_type}_{key}"] = (
-                    value
-                )
+        for key, value in results_subset.items():
+            flattened_results[f"{key_prefix}_{name}_{key}"] = (
+                value
+            )
 
     return flattened_results
 
