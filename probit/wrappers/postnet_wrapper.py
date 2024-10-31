@@ -11,7 +11,7 @@ from pyro.distributions.util import copy_docs_from
 from torch import nn
 from torch.distributions import MultivariateNormal, Transform, constraints
 
-from untangle.wrappers.model_wrapper import DirichletWrapper
+from probit.wrappers.model_wrapper import DirichletWrapper
 
 
 class NormalizingFlowDensity(nn.Module):

@@ -13,14 +13,14 @@ from torch import nn
 from torch.nn.modules.batchnorm import _NormBase  # noqa: PLC2701
 from torch.nn.parameter import is_lazy
 
-from untangle.utils import calculate_output_padding, calculate_same_padding
-from untangle.utils.predictive import (
+from probit.utils import calculate_output_padding, calculate_same_padding
+from probit.utils.predictive import (
     diag_hessian_normalized_normcdf,
     diag_hessian_normalized_sigmoid,
     diag_hessian_softmax,
 )
-from untangle.utils.replace import register, register_cond, replace
-from untangle.wrappers.model_wrapper import DistributionalWrapper
+from probit.utils.replace import register, register_cond, replace
+from probit.wrappers.model_wrapper import DistributionalWrapper
 
 LIKELIHOOD_TO_HESSIAN_DIAG = {
     "softmax": diag_hessian_softmax,

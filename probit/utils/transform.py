@@ -6,15 +6,15 @@ import numpy as np
 import torch
 from torchvision import transforms
 
-from untangle.transforms import (
+from probit.transforms import (
     STR_TO_INTERPOLATION,
     RandomResizedCropAndInterpolation,
     Resize,
     ResizeKeepRatio,
     ToNumpy,
 )
-from untangle.transforms.ood_transforms_cifar import OOD_TRANSFORM_DICT_CIFAR
-from untangle.transforms.ood_transforms_imagenet import OOD_TRANSFORM_DICT_IMAGENET
+from probit.transforms.ood_transforms_cifar import OOD_TRANSFORM_DICT_CIFAR
+from probit.transforms.ood_transforms_imagenet import OOD_TRANSFORM_DICT_IMAGENET
 
 
 def create_transform(

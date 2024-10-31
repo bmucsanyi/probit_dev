@@ -7,7 +7,7 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 
-from untangle.wrappers.model_wrapper import DistributionalWrapper
+from probit.wrappers.model_wrapper import DistributionalWrapper
 
 
 class HETHead(nn.Module):

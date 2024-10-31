@@ -3,7 +3,7 @@
 import torch.nn.functional as F
 from torch import nn
 
-from untangle.wrappers.model_wrapper import DirichletWrapper
+from probit.wrappers.model_wrapper import DirichletWrapper
 
 
 class EDLWrapper(DirichletWrapper):

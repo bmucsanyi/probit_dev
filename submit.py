@@ -27,7 +27,7 @@ parser.add_argument(
 parser.add_argument(
     "--simg-path",
     type=Path,
-    default=Path("/mnt/lustre/work/oh/owl569/repos/probit/untangle.simg"),
+    default=Path("/mnt/lustre/work/oh/owl569/repos/probit/probit.simg"),
     help="Path to Singularity image",
 )
 parser.add_argument(

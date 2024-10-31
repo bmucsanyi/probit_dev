@@ -4,7 +4,7 @@ from functools import partial
 
 import torch
 
-from untangle.utils import DefaultContext
+from probit.utils import DefaultContext
 
 from .collate import fast_collate
 

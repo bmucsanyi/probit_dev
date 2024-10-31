@@ -6,7 +6,7 @@ from typing import Any
 import torch
 from timm.models import create_model as create_timm_model
 
-from untangle.models import (
+from probit.models import (
     resnet_50,
     resnet_c_preact_26,
     resnet_fixup_50,
@@ -16,7 +16,7 @@ from untangle.models import (
     wide_resnet_c_fixup_26_10,
     wide_resnet_c_preact_26_10,
 )
-from untangle.wrappers import (
+from probit.wrappers import (
     BaselineWrapper,
     CovariancePushforwardLaplaceWrapper,
     EDLWrapper,
@@ -30,7 +30,7 @@ from untangle.wrappers import (
 
 logger = logging.getLogger(__name__)
 
-UNTANGLE_STR_TO_MODEL_CLASS = {
+PROBIT_STR_TO_MODEL_CLASS = {
     "resnet_50": resnet_50,
     "resnet_fixup_50": resnet_fixup_50,
     "wide_resnet_c_26_10": wide_resnet_c_26_10,
@@ -54,11 +54,8 @@ def load_model_checkpoint(
         tmp_state_dict = {}
         for k, v in state_dict.items():
             # TODO(bmucsanyi): Fix distributed saving
-            if k.startswith("module."):
-                k = k[7:]
-
-            if k.startswith("model."):
-                k = k[6:]
+            k = k.removeprefix("module.")
+            k = k.removeprefix("model.")
 
             tmp_state_dict[k] = v
 
@@ -94,7 +91,7 @@ def create_model(
             num_classes=num_classes,
             **model_kwargs,
         )
-    elif prefix == "untangle":
+    elif prefix == "probit":
         kwargs = dict(
             num_classes=num_classes,
             in_chans=in_chans,
@@ -104,7 +101,7 @@ def create_model(
         if model_name == "resnet_50":
             kwargs["pretrained"] = pretrained
 
-        model = UNTANGLE_STR_TO_MODEL_CLASS[model_name](**kwargs)
+        model = PROBIT_STR_TO_MODEL_CLASS[model_name](**kwargs)
     else:
         msg = f"Invalid prefix '{prefix}' provided."
         raise ValueError(msg)
@@ -257,10 +254,8 @@ def load_checkpoint(
         tmp_state_dict = {}
         for k, v in state_dict.items():
             # TODO(bmucsanyi): Fix distributed saving
-            if k.startswith("module."):
-                tmp_state_dict[k[7:]] = v
-            else:
-                tmp_state_dict[k] = v
+            k = k.removeprefix("module.")
+            tmp_state_dict[k] = v
 
         state_dict = tmp_state_dict
 

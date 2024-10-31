@@ -14,7 +14,7 @@ from timm.scheduler import create_scheduler_v2
 from torch.nn.parallel import DistributedDataParallel
 
 from test import evaluate, evaluate_bulk
-from untangle.utils import (
+from probit.utils import (
     AverageMeter,
     CheckpointSaver,
     DefaultContext,
@@ -38,7 +38,7 @@ from untangle.utils import (
     setup_logging,
     wrap_model,
 )
-from untangle.wrappers import (
+from probit.wrappers import (
     CovariancePushforwardLaplaceWrapper,
     LinearizedSWAGWrapper,
     PostNetWrapper,

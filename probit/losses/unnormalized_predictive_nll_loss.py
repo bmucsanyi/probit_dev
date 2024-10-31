@@ -2,9 +2,9 @@
 
 from torch import nn
 
-from untangle.losses.normcdf_nll_loss import NormCDFNLLLoss
-from untangle.losses.sigmoid_nll_loss import SigmoidNLLLoss
-from untangle.utils.predictive import PREDICTIVE_DICT
+from probit.losses.normcdf_nll_loss import NormCDFNLLLoss
+from probit.losses.sigmoid_nll_loss import SigmoidNLLLoss
+from probit.utils.predictive import PREDICTIVE_DICT
 
 
 class UnnormalizedPredictiveNLLLoss(nn.Module):

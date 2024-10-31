@@ -5,7 +5,7 @@ import torch.nn.functional as F
 from torch import nn
 from torch.special import ndtr
 
-from untangle.utils.predictive import get_predictive
+from probit.utils.predictive import get_predictive
 
 
 class RegularizedPredictiveNLLLoss(nn.Module):

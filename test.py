@@ -10,7 +10,7 @@ import torch
 import torch.nn.functional as F
 import torch.nn.parallel
 
-from untangle.utils import (
+from probit.utils import (
     AverageMeter,
     area_under_lift_curve,
     area_under_risk_coverage_curve,
@@ -30,7 +30,7 @@ from untangle.utils import (
     relative_area_under_lift_curve,
     spearmanr,
 )
-from untangle.wrappers import (
+from probit.wrappers import (
     CovariancePushforwardLaplaceWrapper,
     DeepEnsembleWrapper,
     EDLWrapper,

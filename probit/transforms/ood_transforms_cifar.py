@@ -296,12 +296,12 @@ def frost(x, severity=1, rng=None):
     c = [(1, 0.2), (1, 0.3), (0.9, 0.4), (0.85, 0.4), (0.75, 0.45)][severity - 1]
     idx = rng.integers(5)
     filename = [
-        "untangle/transforms/assets/frost1.png",
-        "untangle/transforms/assets/frost2.png",
-        "untangle/transforms/assets/frost3.png",
-        "untangle/transforms/assets/frost4.jpg",
-        "untangle/transforms/assets/frost5.jpg",
-        "untangle/transforms/assets/frost6.jpg",
+        "probit/transforms/assets/frost1.png",
+        "probit/transforms/assets/frost2.png",
+        "probit/transforms/assets/frost3.png",
+        "probit/transforms/assets/frost4.jpg",
+        "probit/transforms/assets/frost5.jpg",
+        "probit/transforms/assets/frost6.jpg",
     ][idx]
     frost = cv2.imread(filename)
     frost = cv2.resize(frost, (0, 0), fx=0.2, fy=0.2)

@@ -2,7 +2,7 @@
 
 from torch import nn
 
-from untangle.losses import (
+from probit.losses import (
     BMACrossEntropyLoss,
     EDLLoss,
     NormCDFNLLLoss,

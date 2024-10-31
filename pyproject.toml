@@ -38,7 +38,7 @@ dependencies = [
 description = "A benchmark of uncertainty disentanglement."
 dynamic = ["version"]
 keywords = ["uncertainty disentanglement", "uncertainty quantification"]
-name = "untangle"
+name = "probit"
 readme = "README.md"
 requires-python = ">=3.11,<3.13"
 
@@ -54,10 +54,10 @@ requires = ["setuptools", "setuptools-scm"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-packages = ["untangle"]
+packages = ["probit"]
 
 [tool.setuptools.dynamic]
-version = {attr = "untangle.__version__"}
+version = {attr = "probit.__version__"}
 
 # Testing Configuration
 # See https://docs.pytest.org/en/stable/reference/customize.html
@@ -191,9 +191,9 @@ ignore = [
 
 [tool.ruff.lint.extend-per-file-ignores]
 "test_*.py" = ["S101"]  # Use of assert is allowed in test files
-"untangle/wrappers/swag_wrapper.py" = ["SLF001"]  # Private class accessed in `isinstance`
+"probit/wrappers/swag_wrapper.py" = ["SLF001"]  # Private class accessed in `isinstance`
 # TODO(bmucsanyi): remove when ready
-"untangle/wrappers/swag_wrapper_new.py" = ["SLF001"]  # Private class accessed in `isinstance`
+"probit/wrappers/swag_wrapper_new.py" = ["SLF001"]  # Private class accessed in `isinstance`
 
 [tool.ruff.lint.mccabe]
 max-complexity = 18

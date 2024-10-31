@@ -1,6 +1,6 @@
 """Deep ensemble wrapepr class."""
 
-from untangle.wrappers.model_wrapper import DistributionalWrapper
+from probit.wrappers.model_wrapper import DistributionalWrapper
 
 
 class DeepEnsembleWrapper(DistributionalWrapper):

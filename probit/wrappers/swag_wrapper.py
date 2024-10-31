@@ -7,7 +7,7 @@ from math import sqrt
 
 import torch
 
-from untangle.wrappers.model_wrapper import DistributionalWrapper
+from probit.wrappers.model_wrapper import DistributionalWrapper
 
 logger = logging.getLogger(__name__)
 

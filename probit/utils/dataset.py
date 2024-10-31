@@ -3,14 +3,14 @@
 import torch
 from torchvision.datasets import CIFAR10
 
-from untangle.datasets import (
+from probit.datasets import (
     DATASET_NAME_TO_PATH,
     ImageNet,
     SoftDataset,
     SoftImageNet,
     Subset,
 )
-from untangle.utils.transform import create_transform, hard_target_transform
+from probit.utils.transform import create_transform, hard_target_transform
 
 
 def create_dataset(

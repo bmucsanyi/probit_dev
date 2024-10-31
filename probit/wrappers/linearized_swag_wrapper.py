@@ -4,8 +4,8 @@ import logging
 
 import torch
 
-from untangle.utils.derivative import jvp, vjp
-from untangle.wrappers.model_wrapper import DistributionalWrapper
+from probit.utils.derivative import jvp, vjp
+from probit.wrappers.model_wrapper import DistributionalWrapper
 
 logger = logging.getLogger(__name__)
 

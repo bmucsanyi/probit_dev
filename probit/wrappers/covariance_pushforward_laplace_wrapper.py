@@ -14,9 +14,9 @@ from torch import Tensor
 from torch.nn.parameter import Parameter
 from torch.nn.utils.convert_parameters import parameters_to_vector
 
-from untangle.utils.derivative import jvp, vjp
-from untangle.utils.metric import calibration_error
-from untangle.wrappers.model_wrapper import DistributionalWrapper
+from probit.utils.derivative import jvp, vjp
+from probit.utils.metric import calibration_error
+from probit.wrappers.model_wrapper import DistributionalWrapper
 
 logger = logging.getLogger(__name__)
 
