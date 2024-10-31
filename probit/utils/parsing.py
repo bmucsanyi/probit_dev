@@ -192,7 +192,7 @@ group.add_argument(
 group.add_argument(
     "--num-mc-samples",
     type=int,
-    default=10,
+    default=1000,
     help="Number of Monte Carlo samples in the uncertainty method",
 )
 group.add_argument(
