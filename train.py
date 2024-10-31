@@ -439,7 +439,8 @@ def main():
         saver = CheckpointSaver(
             model=model,
             optimizer=optimizer,
-            loss_scaler=loss_scaler,
+            amp_scaler=loss_scaler,
+            decreasing=True,
             max_history=args.checkpoint_history,
             checkpoint_dir=output_dir,
         )
