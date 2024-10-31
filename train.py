@@ -651,7 +651,7 @@ def create_datasets(args, data_config):
     ood_test_datasets = {}
     for name, location in dataset_locations_ood_test.items():
         ood_test_datasets[name] = create_dataset(
-            name=name[:-2],
+            name=args.dataset_id,
             root=location,
             label_root=args.soft_imagenet_label_dir,
             split=args.test_split,
