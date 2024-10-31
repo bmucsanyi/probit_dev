@@ -890,7 +890,7 @@ def train_one_epoch(
         if lr_scheduler is not None:
             lr_scheduler.step_update(num_updates=num_updates, metric=losses_m.avg)
 
-    return {"loss": losses_m.avg}
+    return {"train_loss": losses_m.avg}
 
 
 @torch.no_grad()
@@ -957,7 +957,7 @@ def validate(
         batch_time_m.update(time.time() - end)
         end = time.time()
 
-    metrics = {"loss": losses_m.avg, "top_1_accuracy": top_1_m.avg}
+    metrics = {"val_loss": losses_m.avg, "val_top_1_accuracy": top_1_m.avg}
 
     return metrics
 
