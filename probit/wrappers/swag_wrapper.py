@@ -73,8 +73,7 @@ class SWAGWrapper(DistributionalWrapper):
             self._sample_and_store_params(train_loader=train_loader, fraction=0.1)
             time_end = time.perf_counter()
             logger.info(
-                f"Sample {i + 1}/{num_mc_samples} took "
-                f"{time_end - time_start} seconds."
+                f"Sample {i + 1}/{num_mc_samples} took {time_end - time_start} seconds."
             )
 
     def to(self, *args, **kwargs):

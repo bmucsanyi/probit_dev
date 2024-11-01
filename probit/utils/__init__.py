@@ -47,10 +47,11 @@ from .predictive import (
     diag_hessian_normalized_sigmoid,
     diag_hessian_softmax,
     get_activation,
+    get_dirichlet,
     get_likelihood,
+    get_log_activation,
     get_mom_dirichlet_approximation,
     get_predictive,
-    get_dirichlet,
 )
 from .random import set_random_seed
 from .replace import (
@@ -100,10 +101,11 @@ __all__ = [
     "excess_area_under_risk_coverage_curve",
     "float_tuple",
     "get_activation",
+    "get_dirichlet",
     "get_likelihood",
+    "get_log_activation",
     "get_mom_dirichlet_approximation",
     "get_predictive",
-    "get_dirichlet",
     "get_ranks",
     "hard_target_transform",
     "init_distributed_device",

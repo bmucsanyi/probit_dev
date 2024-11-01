@@ -3,7 +3,6 @@
 import logging
 import os
 import time
-from numbers import Number
 from pathlib import Path
 
 import torch
@@ -95,9 +94,7 @@ def flatten(results, key_prefix):
     flattened_results = {}
     for name, results_subset in results.items():
         for key, value in results_subset.items():
-            flattened_results[f"{key_prefix}_{name}_{key}"] = (
-                value
-            )
+            flattened_results[f"{key_prefix}_{name}_{key}"] = value
 
     return flattened_results
 
