@@ -13,7 +13,6 @@ from timm.optim import create_optimizer_v2
 from timm.scheduler import create_scheduler_v2
 from torch.nn.parallel import DistributedDataParallel
 
-from test import evaluate, evaluate_bulk
 from probit.utils import (
     AverageMeter,
     CheckpointSaver,
@@ -26,6 +25,7 @@ from probit.utils import (
     create_model,
     distribute_bn,
     get_activation,
+    get_log_activation,
     get_predictive,
     init_distributed_device,
     log_wandb,
@@ -46,6 +46,7 @@ from probit.wrappers import (
     SNGPWrapper,
     SWAGWrapper,
 )
+from test import evaluate, evaluate_bulk
 
 # TODO(bmucsanyi): Remove Namespace from safe globals once the old checkpoints are not
 # used
@@ -911,29 +912,36 @@ def validate(
 
         with amp_autocast():
             output = model(input)
-            if len(output) == 2:
+            if len(output) == 2:  # mean, var
                 predictive_fn = get_predictive(
                     args.predictive, args.use_correction, args.num_mc_samples
                 )
                 mean, var = output
-                prob = predictive_fn(mean, var)
-            elif len(output) == 1 and output[0].ndim == 3:
+                if not args.predictive.endswith("mc"):
+                    logit = predictive_fn(mean, var, return_logits=True)
+                    log_act_fn = get_log_activation(args.predictive)
+                    log_prob = log_act_fn(logit)
+                else:
+                    prob = predictive_fn(mean, var)
+                    log_prob = prob.log().clamp(torch.finfo(prob.dtype).min)
+            elif len(output) == 1 and output[0].ndim == 3:  # [B, S, C]
                 output = output[0]
                 act_fn = get_activation(args.predictive)
-                prob = act_fn(output).mean(dim=1)
-            elif len(output) == 1 and output[0].ndim == 2:
+                log_prob = (
+                    act_fn(output)
+                    .mean(dim=1)
+                    .log()
+                    .clamp(torch.finfo(output.dtype).min)
+                )
+            elif len(output) == 1 and output[0].ndim == 2:  # alpha
                 output = output[0]
                 prob = output / output.sum(dim=-1, keepdim=True)
+                log_prob = prob.log().clamp(torch.finfo(prob.dtype).min)
 
         if target.ndim == 2:
             target = target[:, -1]
 
-        log_likelihood = (
-            prob[torch.arange(target.shape[0]), target]
-            .log()
-            .clamp(torch.finfo(prob.dtype).min)
-            .mean()
-        )
+        log_likelihood = log_prob[torch.arange(target.shape[0]), target].mean()
         loss = -log_likelihood
         top_1 = accuracy(prob, target)[0]
 
