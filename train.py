@@ -192,7 +192,7 @@ def train(
     device,
     args,
 ):
-    best_eval_metric = -float("inf")
+    best_eval_metric = float("inf")
     best_eval_metrics = None
     best_epoch = None
     eval_metric = "val_loss"
