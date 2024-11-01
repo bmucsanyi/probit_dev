@@ -8,7 +8,7 @@ import torch.nn.functional as F
 from numpy import sqrt
 from scipy.special import owens_t
 from torch.distributions import Normal
-from torch.special import ndtr
+from torch.special import log_ndtr, ndtr
 
 LAMBDA_0 = math.pi / 8
 
@@ -475,6 +475,18 @@ def get_activation(predictive):
         return ndtr
     if predictive.startswith("logit"):
         return F.sigmoid
+
+    msg = "Invalid predictive provided"
+    raise ValueError(msg)
+
+
+def get_log_activation(predictive):
+    if predictive.startswith("softmax"):
+        return partial(F.log_softmax, dim=-1)
+    if predictive.startswith("probit"):
+        return log_ndtr
+    if predictive.startswith("logit"):
+        return F.logsigmoid
 
     msg = "Invalid predictive provided"
     raise ValueError(msg)
