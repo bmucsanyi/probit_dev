@@ -943,7 +943,7 @@ def validate(
 
         log_likelihood = log_prob[torch.arange(target.shape[0]), target].mean()
         loss = -log_likelihood
-        top_1 = accuracy(prob, target)[0]
+        top_1 = accuracy(log_prob, target)[0]
 
         if args.distributed:
             reduced_loss = reduce_tensor(loss, args.world_size)
