@@ -233,7 +233,7 @@ def train(
 
             is_new_best = (
                 epoch >= args.best_save_start_epoch
-                and eval_metrics[eval_metric] > best_eval_metric
+                and eval_metrics[eval_metric] < best_eval_metric
             )
 
             if is_new_best:
