@@ -42,7 +42,7 @@ parser.add_argument(
     default=Path("/mnt/lustre/work/oh/owl569/datasets"),
     help="Root path of datasets",
 )
-parser.add_argument("--job-name", type=str, default="probit", help="Job name")
+parser.add_argument("--job-name", type=str, default=None, help="Job name")
 parser.add_argument("--nodes", type=int, default=1, help="Number of nodes")
 parser.add_argument(
     "--ntasks-per-node", type=int, default=1, help="Number of tasks per node"
@@ -359,6 +359,10 @@ def get_cmd_str(args):
 
 def main():
     args = parser.parse_args()
+
+    if args.job_name is None:
+        args.job_name = getattr(args, "sweep-id")
+
     cmd_str = get_cmd_str(args)
 
     slurm_job = SlurmJob(
