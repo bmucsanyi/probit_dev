@@ -1346,18 +1346,18 @@ def convert_inference_res(inference_res, time_forward, args):
         for suffix in suffixes:
             predictive_name = f"{link}_{suffix}"
             predictive_fn = get_predictive(
-                predictive_name, args.use_correction, args.num_mc_samples
+                predictive_name, args.use_correction, args.num_mc_samples, args.approximate,
             )
 
             if suffix.endswith("mc"):
                 for i in [10, 100, 1000]:
                     mc_predictive_fn = get_predictive(
-                        predictive_name, args.use_correction, i
+                        predictive_name, args.use_correction, i, args.approximate
                     )
                     bma, samples = mc_predictive_fn(
                         mean, var, return_samples=True
                     )  # [B, C]
-                    act_fn = get_activation(predictive_name)
+                    act_fn = get_activation(predictive_name, args.approximate)
                     handle_samples(samples, converted_inference_res, act_fn, i)
             else:
                 bma = predictive_fn(mean, var)
@@ -1369,13 +1369,13 @@ def convert_inference_res(inference_res, time_forward, args):
                     continue
 
                 predictive_name = f"{link}_{suffix}"
-                dirichlet_fn = get_dirichlet(predictive_name)
+                dirichlet_fn = get_dirichlet(predictive_name, args.approximate)
                 alpha = dirichlet_fn(mean, var)
                 handle_alpha(alpha, converted_inference_res, suffix)
 
     elif len(inference_res) == 1 and inference_res[0].ndim == 3:
         samples = inference_res[0]
-        act_fn = get_activation(args.predictive)
+        act_fn = get_activation(args.predictive, args.approximate)
         for i in [10, 100, 1000]:
             handle_samples(samples, converted_inference_res, act_fn, i)
     elif len(inference_res) == 1 and inference_res[0].ndim == 2:

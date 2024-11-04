@@ -45,6 +45,7 @@ class GPOutputLayer(nn.Module):
         gp_cov_momentum,
         gp_cov_ridge_penalty,
         likelihood,
+        approximate
     ):
         super().__init__()
         self._num_classes = num_classes
@@ -59,6 +60,9 @@ class GPOutputLayer(nn.Module):
         self._gp_kernel_scale = gp_kernel_scale
         self._gp_output_bias = gp_output_bias
         self._likelihood = likelihood
+        hessian_fn = LIKELIHOOD_TO_HESSIAN_DIAG[likelihood]
+        if likelihood == "normcdf":
+            hessian_fn = partial(hessian_fn, approximate=approximate)
 
         if gp_random_feature_type == "orf":
             self._random_features_weight_initializer = partial(
@@ -141,7 +145,7 @@ class GPOutputLayer(nn.Module):
             if self._likelihood == "gaussian":
                 self._gp_cov_layers[0].update(gp_features)
             else:
-                multipliers = LIKELIHOOD_TO_HESSIAN_DIAG[self._likelihood](
+                multipliers = self._hessian_fn(
                     gp_outputs, targets
                 )  # [B, C]
 
@@ -954,6 +958,7 @@ class SNGPWrapper(DistributionalWrapper):
         gp_cov_ridge_penalty: float,
         gp_input_dim: int,
         likelihood: str,
+        approximate: bool,
     ):
         super().__init__(model)
 
@@ -966,6 +971,7 @@ class SNGPWrapper(DistributionalWrapper):
         self._gp_cov_momentum = gp_cov_momentum
         self._gp_cov_ridge_penalty = gp_cov_ridge_penalty
         self._gp_input_dim = gp_input_dim
+        self._approximate = approximate
 
         if likelihood not in {"gaussian", "softmax", "sigmoid", "normcdf"}:
             msg = f"Invalid likelihood '{likelihood}' provided"
@@ -1000,6 +1006,7 @@ class SNGPWrapper(DistributionalWrapper):
             gp_cov_momentum=self._gp_cov_momentum,
             gp_cov_ridge_penalty=self._gp_cov_ridge_penalty,
             likelihood=self._likelihood,
+            approximate=approximate,
         )
         self._classifier = gp_output_layer
 
@@ -1073,6 +1080,7 @@ class SNGPWrapper(DistributionalWrapper):
         gp_cov_ridge_penalty: float | None = None,
         gp_input_dim: int | None = None,
         likelihood: str | None = None,
+        approximate: bool | None = None,
         *args,
         **kwargs,
     ):
@@ -1106,6 +1114,9 @@ class SNGPWrapper(DistributionalWrapper):
         if likelihood is not None:
             self._likelihood = likelihood
 
+        if approximate is not None:
+            self._approximate = approximate
+
         # Resets global pooling in `self.classifier`
         self.model.reset_classifier(*args, **kwargs)
 
@@ -1136,6 +1147,7 @@ class SNGPWrapper(DistributionalWrapper):
             gp_cov_momentum=self._gp_cov_momentum,
             gp_cov_ridge_penalty=self._gp_cov_ridge_penalty,
             likelihood=self._likelihood,
+            approximate=self._approximate
         )
 
         self._classifier = gp_output_layer

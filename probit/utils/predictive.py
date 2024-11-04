@@ -10,6 +10,8 @@ from scipy.special import owens_t
 from torch.distributions import Normal
 from torch.special import log_ndtr, ndtr
 
+from probit.utils.ndtr import log_ndtr_approx, ndtr_approx
+
 LAMBDA_0 = math.pi / 8
 
 
@@ -55,18 +57,6 @@ def softmax_mc(
     return (prob_mean, logit_samples) if return_samples else prob_mean
 
 
-def logit_link_normcdf_output(
-    mean: torch.Tensor, var: torch.Tensor, *, return_logits: bool = False
-) -> torch.Tensor:
-    return probit_predictive(
-        mean,
-        var,
-        link_function="logit",
-        output_function="normcdf",
-        return_logits=return_logits,
-    )
-
-
 def logit_link_sigmoid_output(
     mean: torch.Tensor, var: torch.Tensor, *, return_logits: bool = False
 ) -> torch.Tensor:
@@ -75,6 +65,7 @@ def logit_link_sigmoid_output(
         var,
         link_function="logit",
         output_function="sigmoid",
+        approximate=False,
         return_logits=return_logits,
     )
 
@@ -102,37 +93,19 @@ def logit_link_mc(
 
 
 def probit_link_normcdf_output(
-    mean: torch.Tensor, var: torch.Tensor, *, return_logits: bool = False
+    mean: torch.Tensor,
+    var: torch.Tensor,
+    *,
+    approximate: bool,
+    return_logits: bool = False,
 ) -> torch.Tensor:
     return probit_predictive(
         mean,
         var,
         link_function="probit",
         output_function="normcdf",
+        approximate=approximate,
         return_logits=return_logits,
-    )
-
-
-def probit_link_sigmoid_output(
-    mean: torch.Tensor, var: torch.Tensor, *, return_logits: bool = False
-) -> torch.Tensor:
-    return probit_predictive(
-        mean,
-        var,
-        link_function="probit",
-        output_function="sigmoid",
-        return_logits=return_logits,
-    )
-
-
-def logit_link_normcdf_output_dirichlet(
-    mean: torch.Tensor, var: torch.Tensor
-) -> torch.Tensor:
-    return get_mom_dirichlet_approximation(
-        mean,
-        var,
-        link_function="logit",
-        output_function="normcdf",
     )
 
 
@@ -144,6 +117,7 @@ def logit_link_sigmoid_output_dirichlet(
         var,
         link_function="logit",
         output_function="sigmoid",
+        approximate=False,
     )
 
 
@@ -155,28 +129,19 @@ def logit_link_sigmoid_product_output_dirichlet(
         var,
         link_function="logit",
         output_function="sigmoid_product",
+        approximate=False,
     )
 
 
 def probit_link_normcdf_output_dirichlet(
-    mean: torch.Tensor, var: torch.Tensor
+    mean: torch.Tensor, var: torch.Tensor, approximate: bool,
 ) -> torch.Tensor:
     return get_mom_dirichlet_approximation(
         mean,
         var,
         link_function="probit",
         output_function="normcdf",
-    )
-
-
-def probit_link_sigmoid_output_dirichlet(
-    mean: torch.Tensor, var: torch.Tensor
-) -> torch.Tensor:
-    return get_mom_dirichlet_approximation(
-        mean,
-        var,
-        link_function="probit",
-        output_function="sigmoid",
+        approximate=approximate,
     )
 
 
@@ -185,6 +150,7 @@ def probit_link_mc(
     var: torch.Tensor,
     num_mc_samples: int,
     *,
+    approximate: bool,
     return_samples: bool = False,
 ) -> torch.Tensor:
     logit_samples = torch.randn(
@@ -194,7 +160,9 @@ def probit_link_mc(
         dtype=mean.dtype,
         device=mean.device,
     ) * var.sqrt().unsqueeze(1) + mean.unsqueeze(1)
-    prob = ndtr(logit_samples.double()).float()
+
+    ndtr_fn = ndtr_approx if approximate else ndtr
+    prob = ndtr_fn(logit_samples.double()).float()
     prob = prob / prob.sum(dim=-1, keepdim=True)
 
     prob_mean = prob.mean(dim=1)
@@ -208,18 +176,26 @@ def probit_predictive(
     link_function: str = "probit",
     output_function: str = "normcdf",
     *,
+    approximate: bool,
     return_logits: bool = False,
 ) -> torch.Tensor:
     """Predictive distribution with the probit link function or approximation."""
     predictives = gaussian_pushforward_mean(
-        mean, var, link_function, output_function, return_logits=return_logits
+        mean,
+        var,
+        link_function,
+        output_function,
+        approximate=approximate,
+        return_logits=return_logits,
     )  # [batch_size, num_classes]
+
     if return_logits:
         return predictives
+
     sum_predictives = torch.sum(predictives, dim=1, keepdim=True)  # [batch_size, 1]
     predictives = predictives / sum_predictives  # [batch_size, num_classes]
 
-    return predictives.clamp(min=1e-10)
+    return predictives
 
 
 def beta_predictive(beta_params: torch.Tensor) -> torch.Tensor:
@@ -301,19 +277,24 @@ def gaussian_pushforward_mean(
     link_function: str = "probit",
     output_function: str = "normcdf",
     *,
+    approximate: bool,
     return_logits: bool = False,
 ) -> torch.Tensor:
     scale = probit_scale(link_function)
     if "normcdf" in output_function:
         logits = means / torch.sqrt(1 / scale + vars)
+
         if return_logits:
             return logits
-        predictives = ndtr(logits.double()).float()
+
+        ndtr_fn = ndtr_approx if approximate else ndtr
+        predictives = ndtr_fn(logits.double()).float()
     elif "sigmoid" in output_function:
-        scale = probit_scale(link_function)
         logits = means / torch.sqrt(1 + scale * vars)
+
         if return_logits:
             return logits
+
         predictives = F.sigmoid(logits)
     else:
         msg = "Invalid output function"
@@ -327,11 +308,13 @@ def gaussian_pushforward_second_moment(
     vars: torch.Tensor,
     link_function: str = "probit",
     output_function: str = "normcdf",
+    *,
+    approximate: bool,
 ) -> torch.Tensor:
     scale = probit_scale(link_function)
     if output_function == "sigmoid_product":
         if link_function == "logit":
-            s = gaussian_pushforward_mean(means, vars, "logit", "sigmoid")
+            s = gaussian_pushforward_mean(means, vars, "logit", "sigmoid", approximate=False)
 
             second_moment = s - s * (1 - s) / torch.sqrt(
                 1 + scale * vars
@@ -348,7 +331,7 @@ def gaussian_pushforward_second_moment(
         t_term = -2 * torch.from_numpy(owens_t(owens_t_input1, owens_t_input2)).to(
             device
         )
-        p_term = gaussian_pushforward_mean(means, vars, link_function, output_function)
+        p_term = gaussian_pushforward_mean(means, vars, link_function, output_function, approximate=approximate)
         second_moment = p_term + t_term
 
     return second_moment
@@ -359,9 +342,11 @@ def get_mom_beta_approximation(
     vars: torch.Tensor,
     link_function: str = "probit",
     output_function: str = "normcdf",
+    *,
+    approximate: bool,
 ) -> torch.Tensor:
-    M1 = gaussian_pushforward_mean(means, vars, link_function, output_function)
-    M2 = gaussian_pushforward_second_moment(means, vars, link_function, output_function)
+    M1 = gaussian_pushforward_mean(means, vars, link_function, output_function, approximate=approximate)
+    M2 = gaussian_pushforward_second_moment(means, vars, link_function, output_function, approximate=approximate)
 
     beta_params = torch.ones((*means.shape, 2), device=means.device)
     L = (M1 - M2) / (M2 - M1**2)
@@ -375,9 +360,13 @@ def get_mom_dirichlet_approximation(
     vars: torch.Tensor,
     link_function: str = "probit",
     output_function: str = "normcdf",
+    *,
+    approximate: bool,
 ) -> torch.Tensor:
-    M1 = gaussian_pushforward_mean(means, vars, link_function, output_function)
-    M2 = gaussian_pushforward_second_moment(means, vars, link_function, output_function)
+    M1 = gaussian_pushforward_mean(
+        means, vars, link_function, output_function, approximate=approximate
+    )
+    M2 = gaussian_pushforward_second_moment(means, vars, link_function, output_function, approximate=approximate)
     S1 = torch.sum(M1, dim=-1, keepdim=True)
     S = torch.maximum(S1, torch.ones(S1.shape, device=S1.device))
     LP = torch.mean(torch.log((M1 * S - M2) / (M2 - M1**2)), dim=-1, keepdim=True)
@@ -406,8 +395,9 @@ def diag_hessian_softmax(logit, target):
 
 
 @torch.compile
-def diag_hessian_normalized_normcdf(logit, target):
-    q = ndtr(logit.double()).float()
+def diag_hessian_normalized_normcdf(logit, target, approximate):
+    ndtr_fn = ndtr_approx if approximate else ndtr
+    q = ndtr_fn(logit.double()).float()
     s = q.sum(dim=-1, keepdim=True)
     normal = Normal(0, 1)
     phi = normal.log_prob(logit).exp()  # Norm pdf
@@ -422,17 +412,15 @@ PREDICTIVE_DICT = {
     "softmax_laplace_bridge": softmax_laplace_bridge,
     "softmax_mean_field": softmax_mean_field,
     "softmax_mc": softmax_mc,
-    "logit_link_normcdf_output": logit_link_normcdf_output,
     "logit_link_sigmoid_output": logit_link_sigmoid_output,
     "logit_link_sigmoid_product_output": logit_link_sigmoid_output,
     "logit_link_mc": logit_link_mc,
     "probit_link_normcdf_output": probit_link_normcdf_output,
-    "probit_link_sigmoid_output": probit_link_sigmoid_output,
     "probit_link_mc": probit_link_mc,
 }
 
 
-def get_predictive(predictive, use_correction, num_mc_samples):
+def get_predictive(predictive, use_correction, num_mc_samples, approximate):
     predictive_fn = PREDICTIVE_DICT[predictive]
 
     if predictive.endswith("mc"):
@@ -440,20 +428,24 @@ def get_predictive(predictive, use_correction, num_mc_samples):
     elif predictive == "softmax_laplace_bridge":
         predictive_fn = partial(predictive_fn, use_correction=use_correction)
 
+    if predictive.startswith("probit"):
+        predictive_fn = partial(predictive_fn, approximate=approximate)
+
     return predictive_fn
 
 
 DIRICHLET_DICT = {
-    "logit_link_normcdf_output": logit_link_normcdf_output_dirichlet,
     "logit_link_sigmoid_output": logit_link_sigmoid_output_dirichlet,
     "logit_link_sigmoid_product_output": logit_link_sigmoid_product_output_dirichlet,
     "probit_link_normcdf_output": probit_link_normcdf_output_dirichlet,
-    "probit_link_sigmoid_output": probit_link_sigmoid_output_dirichlet,
 }
 
 
-def get_dirichlet(dirichlet):
-    return DIRICHLET_DICT[dirichlet]
+def get_dirichlet(dirichlet, approximate):
+    dirichlet = DIRICHLET_DICT[dirichlet]
+
+    if dirichlet.startswith("probit"):
+        dirichlet = partial(dirichlet, approximate=approximate)
 
 
 def get_likelihood(predictive):
@@ -468,11 +460,11 @@ def get_likelihood(predictive):
     raise ValueError(msg)
 
 
-def get_activation(predictive):
+def get_activation(predictive, approximate):
     if predictive.startswith("softmax"):
         return partial(F.softmax, dim=-1)
     if predictive.startswith("probit"):
-        return ndtr
+        return ndtr_approx if approximate else ndtr
     if predictive.startswith("logit"):
         return F.sigmoid
 
@@ -480,11 +472,11 @@ def get_activation(predictive):
     raise ValueError(msg)
 
 
-def get_log_activation(predictive):
+def get_log_activation(predictive, approximate):
     if predictive.startswith("softmax"):
         return partial(F.log_softmax, dim=-1)
     if predictive.startswith("probit"):
-        return log_ndtr
+        return log_ndtr_approx if approximate else log_ndtr
     if predictive.startswith("logit"):
         return F.logsigmoid
 

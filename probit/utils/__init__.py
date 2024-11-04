@@ -33,6 +33,7 @@ from .metric import (
     spearmanr,
 )
 from .model import create_model, wrap_model
+from .ndtr import log_ndtr_approx, ndtr_approx
 from .parsing import (
     float_tuple,
     int_tuple,
@@ -115,9 +116,11 @@ __all__ = [
     "kl_divergence",
     "kwargs",
     "kwargs",
+    "log_ndtr_approx",
     "log_wandb",
     "multiclass_brier",
     "multiclass_log_probability",
+    "ndtr_approx",
     "optimizer_kwargs",
     "parse_args",
     "pearsonr",

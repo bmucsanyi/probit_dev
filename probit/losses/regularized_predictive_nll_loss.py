@@ -5,6 +5,7 @@ import torch.nn.functional as F
 from torch import nn
 from torch.special import ndtr
 
+from probit.utils.ndtr import ndtr_approx
 from probit.utils.predictive import get_predictive
 
 
@@ -12,7 +13,12 @@ class RegularizedPredictiveNLLLoss(nn.Module):
     """Regularized predictive NLL loss."""
 
     def __init__(
-        self, predictive, use_correction, num_mc_samples, regularization_factor
+        self,
+        predictive,
+        use_correction,
+        num_mc_samples,
+        regularization_factor,
+        approximate,
     ):
         super().__init__()
 
@@ -20,8 +26,13 @@ class RegularizedPredictiveNLLLoss(nn.Module):
             msg = "Invalid predictive provided"
             raise ValueError(msg)
 
-        self._predictive = get_predictive(predictive, use_correction, num_mc_samples)
-        self._activation = ndtr if predictive.startswith("probit") else F.sigmoid
+        self._predictive = get_predictive(predictive, use_correction, num_mc_samples, approximate)
+
+        if predictive.startswith("probit"):
+            self._activation = ndtr_approx if approximate else ndtr
+        else:
+            self._activation = F.sigmoid
+
         self._regularization_factor = regularization_factor
 
     def forward(self, logits, targets):

@@ -319,6 +319,11 @@ group.add_argument(
     help="Input dimension to the GP (if > 0, use random projection)",
 )
 group.add_argument(
+    "--approximate",
+    action="store_true",
+    help="Whether to spproximate the normcdf activation function",
+)
+group.add_argument(
     "--latent-dim",
     type=int,
     default=6,

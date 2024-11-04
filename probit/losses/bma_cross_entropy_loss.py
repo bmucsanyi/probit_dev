@@ -22,7 +22,9 @@ class BMACrossEntropyLoss(nn.Module):
         if predictive.endswith("mc"):
             self.loss = nn.NLLLoss()
         else:
-            self.predictive = get_predictive(predictive, use_correction, num_mc_samples)
+            self.predictive = get_predictive(
+                predictive, use_correction, num_mc_samples, approximate=False
+            )
             self.loss = nn.CrossEntropyLoss()
 
         self.eps = 1e-10

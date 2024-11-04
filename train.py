@@ -407,9 +407,11 @@ def main():
             args.predictive,
             use_correction=args.use_correction,
             num_mc_samples=args.num_mc_samples,
+            approximate=args.approximate,
         ),
         use_eigval_prior=args.use_eigval_prior,
         gp_likelihood=args.gp_likelihood,
+        approximate=args.approximate,
         verbose=args.rank == 0,
     )
 
@@ -914,12 +916,12 @@ def validate(
             output = model(input)
             if len(output) == 2:  # mean, var
                 predictive_fn = get_predictive(
-                    args.predictive, args.use_correction, args.num_mc_samples
+                    args.predictive, args.use_correction, args.num_mc_samples, args.approximate
                 )
                 mean, var = output
                 if not args.predictive.endswith("mc"):
                     logit = predictive_fn(mean, var, return_logits=True)
-                    log_act_fn = get_log_activation(args.predictive)
+                    log_act_fn = get_log_activation(args.predictive, args.approximate)
                     log_prob = log_act_fn(logit)
                 else:
                     prob = predictive_fn(mean, var)
@@ -928,10 +930,10 @@ def validate(
                 output = output[0]
                 if output.shape[1] == 1:
                     output = output.squeeze()
-                    log_act_fn = get_log_activation(args.predictive)
+                    log_act_fn = get_log_activation(args.predictive, args.approximate)
                     log_prob = log_act_fn(output)
                 else:
-                    act_fn = get_activation(args.predictive)
+                    act_fn = get_activation(args.predictive, args.approximate)
                     log_prob = (
                         act_fn(output)
                         .mean(dim=1)

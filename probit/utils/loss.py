@@ -45,6 +45,7 @@ def create_loss_fn(args, num_batches):
             use_correction=args.use_correction,
             num_mc_samples=args.num_mc_samples,
             regularization_factor=args.regularization_factor,
+            approximate=args.approximate,
         )
     elif args.loss == "unnormalized-predictive-nll":
         train_loss_fn = UnnormalizedPredictiveNLLLoss(predictive=args.predictive)
