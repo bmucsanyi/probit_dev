@@ -36,7 +36,7 @@ def create_loss_fn(args, num_batches):
             regularization_factor=args.regularization_factor
         )
     elif args.loss == "normcdf-nll":
-        train_loss_fn = NormCDFNLLLoss()
+        train_loss_fn = NormCDFNLLLoss(args.approximate)
     elif args.loss == "sigmoid-nll":
         train_loss_fn = SigmoidNLLLoss()
     elif args.loss == "regularized-predictive-nll":
