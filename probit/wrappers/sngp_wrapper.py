@@ -45,7 +45,7 @@ class GPOutputLayer(nn.Module):
         gp_cov_momentum,
         gp_cov_ridge_penalty,
         likelihood,
-        approximate
+        approximate,
     ):
         super().__init__()
         self._num_classes = num_classes
@@ -151,9 +151,7 @@ class GPOutputLayer(nn.Module):
             if self._likelihood == "gaussian":
                 self._gp_cov_layers[0].update(gp_features)
             else:
-                multipliers = self._hessian_fn(
-                    gp_outputs, targets
-                )  # [B, C]
+                multipliers = self._hessian_fn(gp_outputs, targets)  # [B, C]
 
                 for cov_layer, multiplier in zip(
                     self._gp_cov_layers, multipliers.T, strict=True
@@ -1153,7 +1151,7 @@ class SNGPWrapper(DistributionalWrapper):
             gp_cov_momentum=self._gp_cov_momentum,
             gp_cov_ridge_penalty=self._gp_cov_ridge_penalty,
             likelihood=self._likelihood,
-            approximate=self._approximate
+            approximate=self._approximate,
         )
 
         self._classifier = gp_output_layer

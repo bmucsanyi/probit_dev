@@ -48,7 +48,9 @@ def create_loss_fn(args, num_batches):
             approximate=args.approximate,
         )
     elif args.loss == "unnormalized-predictive-nll":
-        train_loss_fn = UnnormalizedPredictiveNLLLoss(predictive=args.predictive)
+        train_loss_fn = UnnormalizedPredictiveNLLLoss(
+            predictive=args.predictive, approximate=args.approximate
+        )
     elif args.loss == "softmax-predictive-nll":
         train_loss_fn = SoftmaxPredictiveNLLLoss(predictive=args.predictive)
     else:

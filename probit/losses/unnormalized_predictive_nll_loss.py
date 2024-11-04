@@ -1,5 +1,7 @@
 """Unnormalized predictive NLL loss for multiclass classification."""
 
+from functools import partial
+
 from torch import nn
 
 from probit.losses.normcdf_nll_loss import NormCDFNLLLoss
@@ -10,7 +12,7 @@ from probit.utils.predictive import PREDICTIVE_DICT
 class UnnormalizedPredictiveNLLLoss(nn.Module):
     """Unnormalized predictive NLL loss."""
 
-    def __init__(self, predictive):
+    def __init__(self, predictive, approximate):
         super().__init__()
 
         if not predictive.startswith(("probit", "logit")) or predictive.endswith("mc"):
@@ -18,8 +20,14 @@ class UnnormalizedPredictiveNLLLoss(nn.Module):
             raise ValueError(msg)
 
         self._predictive = PREDICTIVE_DICT[predictive]
+
+        if predictive.startswith("probit"):
+            self._predictive = partial(self._predictive, approximate=approximate)
+
         self._loss = (
-            NormCDFNLLLoss() if predictive.startswith("probit") else SigmoidNLLLoss()
+            NormCDFNLLLoss(approximate=approximate)
+            if predictive.startswith("probit")
+            else SigmoidNLLLoss()
         )
 
     def forward(self, logits, targets):

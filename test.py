@@ -1346,7 +1346,10 @@ def convert_inference_res(inference_res, time_forward, args):
         for suffix in suffixes:
             predictive_name = f"{link}_{suffix}"
             predictive_fn = get_predictive(
-                predictive_name, args.use_correction, args.num_mc_samples, args.approximate,
+                predictive_name,
+                args.use_correction,
+                args.num_mc_samples,
+                args.approximate,
             )
 
             if suffix.endswith("mc"):

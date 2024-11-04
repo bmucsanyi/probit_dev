@@ -916,7 +916,10 @@ def validate(
             output = model(input)
             if len(output) == 2:  # mean, var
                 predictive_fn = get_predictive(
-                    args.predictive, args.use_correction, args.num_mc_samples, args.approximate
+                    args.predictive,
+                    args.use_correction,
+                    args.num_mc_samples,
+                    args.approximate,
                 )
                 mean, var = output
                 if not args.predictive.endswith("mc"):

@@ -26,7 +26,9 @@ class RegularizedPredictiveNLLLoss(nn.Module):
             msg = "Invalid predictive provided"
             raise ValueError(msg)
 
-        self._predictive = get_predictive(predictive, use_correction, num_mc_samples, approximate)
+        self._predictive = get_predictive(
+            predictive, use_correction, num_mc_samples, approximate
+        )
 
         if predictive.startswith("probit"):
             self._activation = ndtr_approx if approximate else ndtr

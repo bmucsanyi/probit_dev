@@ -134,7 +134,9 @@ def logit_link_sigmoid_product_output_dirichlet(
 
 
 def probit_link_normcdf_output_dirichlet(
-    mean: torch.Tensor, var: torch.Tensor, approximate: bool,
+    mean: torch.Tensor,
+    var: torch.Tensor,
+    approximate: bool,
 ) -> torch.Tensor:
     return get_mom_dirichlet_approximation(
         mean,
@@ -314,7 +316,9 @@ def gaussian_pushforward_second_moment(
     scale = probit_scale(link_function)
     if output_function == "sigmoid_product":
         if link_function == "logit":
-            s = gaussian_pushforward_mean(means, vars, "logit", "sigmoid", approximate=False)
+            s = gaussian_pushforward_mean(
+                means, vars, "logit", "sigmoid", approximate=False
+            )
 
             second_moment = s - s * (1 - s) / torch.sqrt(
                 1 + scale * vars
@@ -331,7 +335,9 @@ def gaussian_pushforward_second_moment(
         t_term = -2 * torch.from_numpy(owens_t(owens_t_input1, owens_t_input2)).to(
             device
         )
-        p_term = gaussian_pushforward_mean(means, vars, link_function, output_function, approximate=approximate)
+        p_term = gaussian_pushforward_mean(
+            means, vars, link_function, output_function, approximate=approximate
+        )
         second_moment = p_term + t_term
 
     return second_moment
@@ -345,8 +351,12 @@ def get_mom_beta_approximation(
     *,
     approximate: bool,
 ) -> torch.Tensor:
-    M1 = gaussian_pushforward_mean(means, vars, link_function, output_function, approximate=approximate)
-    M2 = gaussian_pushforward_second_moment(means, vars, link_function, output_function, approximate=approximate)
+    M1 = gaussian_pushforward_mean(
+        means, vars, link_function, output_function, approximate=approximate
+    )
+    M2 = gaussian_pushforward_second_moment(
+        means, vars, link_function, output_function, approximate=approximate
+    )
 
     beta_params = torch.ones((*means.shape, 2), device=means.device)
     L = (M1 - M2) / (M2 - M1**2)
@@ -366,7 +376,9 @@ def get_mom_dirichlet_approximation(
     M1 = gaussian_pushforward_mean(
         means, vars, link_function, output_function, approximate=approximate
     )
-    M2 = gaussian_pushforward_second_moment(means, vars, link_function, output_function, approximate=approximate)
+    M2 = gaussian_pushforward_second_moment(
+        means, vars, link_function, output_function, approximate=approximate
+    )
     S1 = torch.sum(M1, dim=-1, keepdim=True)
     S = torch.maximum(S1, torch.ones(S1.shape, device=S1.device))
     LP = torch.mean(torch.log((M1 * S - M2) / (M2 - M1**2)), dim=-1, keepdim=True)
