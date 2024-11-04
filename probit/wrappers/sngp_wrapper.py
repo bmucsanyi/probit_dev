@@ -60,9 +60,15 @@ class GPOutputLayer(nn.Module):
         self._gp_kernel_scale = gp_kernel_scale
         self._gp_output_bias = gp_output_bias
         self._likelihood = likelihood
-        hessian_fn = LIKELIHOOD_TO_HESSIAN_DIAG[likelihood]
-        if likelihood == "normcdf":
-            hessian_fn = partial(hessian_fn, approximate=approximate)
+
+        self._hessian_fn = None
+
+        if likelihood != "gaussian":
+            hessian_fn = LIKELIHOOD_TO_HESSIAN_DIAG[likelihood]
+            if likelihood == "normcdf":
+                hessian_fn = partial(hessian_fn, approximate=approximate)
+
+            self._hessian_fn = hessian_fn
 
         if gp_random_feature_type == "orf":
             self._random_features_weight_initializer = partial(
