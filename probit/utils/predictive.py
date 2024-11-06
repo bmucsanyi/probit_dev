@@ -472,13 +472,52 @@ def get_likelihood(predictive):
     raise ValueError(msg)
 
 
+def normed_sigmoid(x):
+    x = F.sigmoid(x)
+    x = x / x.sum(dim=-1, keepdim=True)
+
+    return x
+
+
+def log_normed_sigmoid(x):
+    x = F.logsigmoid(x)
+
+    return x - torch.logsumexp(x)
+
+
+def normed_ndtr_approx(x):
+    x = ndtr_approx(x)
+    x = x / sum(dim=-1, keepdim=True)
+
+    return x
+
+
+def log_normed_ndtr_approx(x):
+    x = log_ndtr_approx(x)
+
+    return x - torch.logsumexp(x)
+
+
+def normed_ndtr(x):
+    x = ndtr(x)
+    x = x / sum(dim=-1, keepdim=True)
+
+    return x
+
+
+def log_normed_ndtr(x):
+    x = log_ndtr(x)
+
+    return x - torch.logsumexp(x)
+
+
 def get_activation(predictive, approximate):
     if predictive.startswith("softmax"):
         return partial(F.softmax, dim=-1)
     if predictive.startswith("probit"):
-        return ndtr_approx if approximate else ndtr
+        return normed_ndtr_approx if approximate else normed_ndtr
     if predictive.startswith("logit"):
-        return F.sigmoid
+        return normed_sigmoid
 
     msg = "Invalid predictive provided"
     raise ValueError(msg)
@@ -488,9 +527,9 @@ def get_log_activation(predictive, approximate):
     if predictive.startswith("softmax"):
         return partial(F.log_softmax, dim=-1)
     if predictive.startswith("probit"):
-        return log_ndtr_approx if approximate else log_ndtr
+        return log_normed_ndtr_approx if approximate else log_normed_ndtr
     if predictive.startswith("logit"):
-        return F.logsigmoid
+        return log_normed_sigmoid
 
     msg = "Invalid predictive provided"
     raise ValueError(msg)
