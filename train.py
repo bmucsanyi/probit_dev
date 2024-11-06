@@ -975,6 +975,7 @@ def validate(
     return metrics
 
 
+@torch.no_grad()
 def update_post_hoc_method(model, train_loader, hard_id_eval_loader, args):
     if isinstance(
         model, SamplePushforwardLaplaceWrapper | CovariancePushforwardLaplaceWrapper

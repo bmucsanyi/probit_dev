@@ -176,6 +176,7 @@ def wrap_model(
             "predictive_fn": predictive_fn,
             "use_eigval_prior": use_eigval_prior,
             "mask_regex": mask_regex,
+            "weight_path": weight_paths[0],
         }
         if use_sampling:
             kwargs["num_mc_samples"] = num_mc_samples

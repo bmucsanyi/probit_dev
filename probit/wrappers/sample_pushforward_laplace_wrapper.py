@@ -125,10 +125,12 @@ class SamplePushforwardLaplaceWrapper(DistributionalWrapper):
         predictive_fn,
         num_mc_samples,
         mask_regex,
+        weight_path,
         *,
         use_eigval_prior=False,
     ):
         super().__init__(model)
+        self._load_model(weight_path)
         # Save args
         self.rank = rank
         self.loss_function = loss_function
