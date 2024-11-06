@@ -482,25 +482,25 @@ def normed_sigmoid(x):
 def log_normed_sigmoid(x):
     x = F.logsigmoid(x)
 
-    return x - torch.logsumexp(x)
+    return x - torch.logsumexp(x, dim=-1, keepdim=True)
 
 
 def normed_ndtr_approx(x):
     x = ndtr_approx(x)
-    x = x / sum(dim=-1, keepdim=True)
+    x = x / x.sum(dim=-1, keepdim=True)
 
     return x
 
 
 def log_normed_ndtr_approx(x):
-    x = log_ndtr_approx(x)
+    x = log_ndtr_approx(x)  # [B, C]
 
-    return x - torch.logsumexp(x)
+    return x - torch.logsumexp(x, dim=-1, keepdim=True)
 
 
 def normed_ndtr(x):
     x = ndtr(x)
-    x = x / sum(dim=-1, keepdim=True)
+    x = x / x.sum(dim=-1, keepdim=True)
 
     return x
 
@@ -508,7 +508,7 @@ def normed_ndtr(x):
 def log_normed_ndtr(x):
     x = log_ndtr(x)
 
-    return x - torch.logsumexp(x)
+    return x - torch.logsumexp(x, dim=-1, keepdim=True)
 
 
 def get_activation(predictive, approximate):
