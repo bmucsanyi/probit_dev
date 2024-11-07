@@ -21,8 +21,7 @@ class LinearizedSWAGWrapper(DistributionalWrapper):
         self._min_var = 1e-30
         self._swag_params_device = torch.device("cpu")
 
-        self._weight_path = weight_path
-        self._load_model()
+        self._load_model(weight_path)
 
         self.register_buffer(
             "_num_checkpoints_swag",

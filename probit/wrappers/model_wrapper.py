@@ -48,9 +48,8 @@ class ModelWrapper(nn.Module):
                 converted_state_dict[k] = v
         return converted_state_dict
 
-    def _load_model(self):
+    def _load_model(self, weight_path):
         """Loads the model."""
-        weight_path = self._weight_path
         checkpoint = torch.load(weight_path, map_location="cpu", weights_only=True)
         state_dict = checkpoint["state_dict"]
         state_dict = self._convert_state_dict(state_dict)

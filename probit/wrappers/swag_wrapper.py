@@ -23,8 +23,7 @@ class SWAGWrapper(DistributionalWrapper):
         self._min_var = 1e-30
         self._swag_params_device = torch.device("cpu")
 
-        self._weight_path = weight_path
-        self._load_model()
+        self._load_model(weight_path)
 
         num_params = sum(
             param.numel() for param in model.parameters() if param.requires_grad
