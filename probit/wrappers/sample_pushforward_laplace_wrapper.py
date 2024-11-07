@@ -158,8 +158,9 @@ class SamplePushforwardLaplaceWrapper(DistributionalWrapper):
                 if re.match(mask_regex, param_name):
                     param.requires_grad = False
 
-    def perform_laplace_approximation(self, train_loader, val_loader):
+    def perform_laplace_approximation(self, train_loader, val_loader, channels_last):
         self.train_loader = train_loader
+        self.channels_last = channels_last
         # Construct quadratic model
         self.quadratic = Quadratic(
             B_0v=self.get_B_0v,
@@ -247,6 +248,9 @@ class SamplePushforwardLaplaceWrapper(DistributionalWrapper):
         for input, target in val_loader:
             input = input.to(device)
             target = target.to(device)
+
+            if self.channels_last:
+                input = input.contiguous(memory_format=torch.channels_last)
 
             mean, var = self(input)
             out = self.predictive_fn(mean, var)
@@ -408,6 +412,10 @@ class SamplePushforwardLaplaceWrapper(DistributionalWrapper):
         for inputs, targets in self.train_loader:
             inputs = inputs.to(device)
             targets = targets.to(device)
+
+            if self.channels_last:
+                inputs = inputs.contiguous(memory_format=torch.channels_last)
+
             # Forward pass
             with torch.enable_grad():
                 outputs = self.model(inputs)
@@ -526,6 +534,9 @@ class SamplePushforwardLaplaceWrapper(DistributionalWrapper):
         for inputs, targets in self.train_loader:
             inputs = inputs.to(device)
             targets = targets.to(device)
+
+            if self.channels_last:
+                inputs = inputs.contiguous(memory_format=torch.channels_last)
 
             # Compute GGN vector product
             with torch.enable_grad():

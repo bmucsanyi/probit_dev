@@ -179,6 +179,32 @@ def setup_scheduler(optimizer, train_loader, args):
     return lr_scheduler, num_epochs
 
 
+@torch.no_grad()
+def initialize_lazy_modules(
+    model,
+    amp_autocast,
+    data_config,
+    device,
+    args,
+) -> None:
+    """Initializes lazy modules in the model.
+
+    Args:
+        model: The model to initialize.
+        amp_autocast: The autocast function to use.
+        data_config: The data configuration.
+        device: The device to use for initialization.
+        args: The command-line arguments.
+    """
+    dummy_input = torch.randn(
+        args.batch_size,
+        *tuple(data_config["input_size"]),
+    ).to(device)
+
+    with amp_autocast():
+        model(dummy_input)
+
+
 def train(
     num_epochs,
     model,
@@ -346,6 +372,7 @@ def main():
 
     set_random_seed(args.seed, args.rank)
     data_config = resolve_data_config(vars(args))
+    amp_autocast, loss_scaler = setup_amp(device, args)
 
     (
         train_loader,
@@ -418,6 +445,12 @@ def main():
     # Move model to device
     model.to(device=device)
 
+    if args.channels_last:
+        if isinstance(model, SNGPWrapper):
+            initialize_lazy_modules(model, amp_autocast, data_config, device, args)
+
+        model.to(memory_format=torch.channels_last)
+
     # Setup distributed training
     if args.distributed:
         model = DistributedDataParallel(
@@ -429,7 +462,6 @@ def main():
         model,
         **optimizer_kwargs(args=args),
     )
-    amp_autocast, loss_scaler = setup_amp(device, args)
     setup_compile(model, args)
 
     setup_wrapper(model, train_loader)
@@ -827,6 +859,9 @@ def train_one_epoch(
         if not args.prefetcher:
             input, target = input.to(device), target.to(device)
 
+        if args.channels_last:
+            input = input.contiguous(memory_format=torch.channels_last)
+
         loss = forward(
             model=model,
             input=input,
@@ -983,10 +1018,14 @@ def update_post_hoc_method(model, train_loader, hard_id_eval_loader, args):
         if hard_id_eval_loader is None:
             msg = "For Laplace approximation, the ID eval loader has to be specified."
             raise ValueError(msg)
-        model.perform_laplace_approximation(train_loader, hard_id_eval_loader)
+        model.perform_laplace_approximation(
+            train_loader, hard_id_eval_loader, args.channels_last
+        )
     elif isinstance(model, SWAGWrapper):
         model.get_mc_samples(
-            train_loader=train_loader, num_mc_samples=args.num_mc_samples
+            train_loader=train_loader,
+            num_mc_samples=args.num_mc_samples,
+            channels_last=args.channels_last,
         )
 
 

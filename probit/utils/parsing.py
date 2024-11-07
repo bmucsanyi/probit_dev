@@ -346,6 +346,11 @@ group.add_argument(
     help="Whether to reset the classifier layer before training",
 )
 group.add_argument(
+    "--channels-last",
+    action="store_true",
+    help="Whether to use channels-last memory layout",
+)
+group.add_argument(
     "--scale",
     default=(0.08, 1.0),
     type=float_tuple,
