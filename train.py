@@ -305,6 +305,15 @@ def load_best_checkpoint(saver, model):
     model.load_state_dict(state_dict, strict=True)
 
 
+def get_laplace_loss_fn(args):
+    log_act_fn = get_log_activation(args.predictive, args.approximate)
+
+    def laplace_loss_fn(logit, target):
+        return -log_act_fn(logit)[torch.arange(target.shape[0]), target].mean()
+
+    return laplace_loss_fn
+
+
 def test(
     num_epochs,
     model,
@@ -429,7 +438,7 @@ def main():
         use_batched_flow=args.use_batched_flow,
         edl_activation=args.edl_activation,
         checkpoint_path=args.initial_checkpoint_path,
-        loss_fn=train_loss_fn,
+        loss_fn=get_laplace_loss_fn(args),
         predictive_fn=get_predictive(
             args.predictive,
             use_correction=args.use_correction,
