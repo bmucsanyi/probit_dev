@@ -14,3 +14,4 @@ huggingface-hub
 laplace-torch
 pyro-ppl
 pytorch-minimize
+einops
