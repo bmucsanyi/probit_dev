@@ -18,7 +18,8 @@ from probit.models import (
 )
 from probit.wrappers import (
     BaselineWrapper,
-    CovariancePushforwardLaplaceWrapper,
+    # CovariancePushforwardLaplaceWrapper,
+    CovariancePushforwardLaplaceWrapper2,
     EDLWrapper,
     HETWrapper,
     LinearizedSWAGWrapper,
@@ -184,7 +185,7 @@ def wrap_model(
         else:
             del kwargs["rank"]  # TODO: temporary fix
             del kwargs["use_eigval_prior"]  # TODO: temporary fix
-            wrapped_model = CovariancePushforwardLaplaceWrapper(**kwargs)
+            wrapped_model = CovariancePushforwardLaplaceWrapper2(**kwargs)
     elif model_wrapper_name == "swag":
         kwargs = {
             "model": model,
