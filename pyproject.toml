@@ -34,7 +34,8 @@ dependencies = [
     "laplace-torch",
     "pyro-ppl",
     "pytorch-minimize",
-    "einops"
+    "einops",
+    "backpack-for-pytorch",
 ]
 description = "A benchmark of uncertainty disentanglement."
 dynamic = ["version"]
@@ -152,6 +153,7 @@ ignore = [
     "PLR0915",
     "PLR0917",
     "PLW2901",
+    "S101",
     # "C901",
     # Temporary ignores END
     "D206",

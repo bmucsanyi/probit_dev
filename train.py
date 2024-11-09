@@ -429,7 +429,7 @@ def main():
         use_batched_flow=args.use_batched_flow,
         edl_activation=args.edl_activation,
         checkpoint_path=args.initial_checkpoint_path,
-        loss_function=train_loss_fn,
+        loss_fn=train_loss_fn,
         predictive_fn=get_predictive(
             args.predictive,
             use_correction=args.use_correction,

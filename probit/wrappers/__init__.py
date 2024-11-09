@@ -1,6 +1,7 @@
 __all__ = [
     "BaselineWrapper",
     "CovariancePushforwardLaplaceWrapper",
+    "CovariancePushforwardLaplaceWrapper2",
     "DeepEnsembleWrapper",
     "EDLWrapper",
     "HETWrapper",
@@ -13,6 +14,9 @@ __all__ = [
 
 from .baseline_wrapper import BaselineWrapper
 from .covariance_pushforward_laplace_wrapper import CovariancePushforwardLaplaceWrapper
+from .covariance_pushforward_laplace_wrapper2 import (
+    CovariancePushforwardLaplaceWrapper2,
+)
 from .deep_ensemble_wrapper import DeepEnsembleWrapper
 from .edl_wrapper import EDLWrapper
 from .het_wrapper import HETWrapper

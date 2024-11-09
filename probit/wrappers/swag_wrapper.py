@@ -69,7 +69,9 @@ class SWAGWrapper(DistributionalWrapper):
         logger.info("Starting MC sampling the SWAG weights.")
         for i in range(num_mc_samples):
             time_start = time.perf_counter()
-            self._sample_and_store_params(train_loader=train_loader, fraction=0.1, channels_last=channels_last)
+            self._sample_and_store_params(
+                train_loader=train_loader, fraction=0.1, channels_last=channels_last
+            )
             time_end = time.perf_counter()
             logger.info(
                 f"Sample {i + 1}/{num_mc_samples} took {time_end - time_start} seconds."
@@ -239,7 +241,9 @@ class SWAGWrapper(DistributionalWrapper):
             [self._sampled_params_swag, sample.unsqueeze(dim=0)], dim=0
         )
         self._unflatten_and_set_params(sample)
-        self._set_and_store_bn_stats(train_loader=train_loader, fraction=fraction, channels_last=channels_last)
+        self._set_and_store_bn_stats(
+            train_loader=train_loader, fraction=fraction, channels_last=channels_last
+        )
 
     def _set_model(self, model_index):
         if model_index >= self.num_models or model_index < 0:
@@ -316,7 +320,9 @@ class SWAGWrapper(DistributionalWrapper):
         return flag[0]
 
     @torch.no_grad()
-    def _set_and_store_bn_stats(self, train_loader, fraction=None, channels_last=False):
+    def _set_and_store_bn_stats(
+        self, train_loader, fraction=None, *, channels_last=False
+    ):
         """Updates and saves the BatchNorm buffers using a `fraction` of `loader`."""
         device = next(self.model.parameters()).device
 

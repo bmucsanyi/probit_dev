@@ -148,7 +148,7 @@ def wrap_model(
     use_batched_flow,
     edl_activation,
     checkpoint_path,
-    loss_function,
+    loss_fn,
     predictive_fn,
     use_eigval_prior,
     gp_likelihood,
@@ -171,9 +171,9 @@ def wrap_model(
     elif model_wrapper_name == "laplace":
         kwargs = {
             "model": model,
-            "loss_function": loss_function,
-            "rank": matrix_rank,
+            "loss_fn": loss_fn,
             "predictive_fn": predictive_fn,
+            "rank": matrix_rank,
             "use_eigval_prior": use_eigval_prior,
             "mask_regex": mask_regex,
             "weight_path": weight_paths[0],
@@ -182,6 +182,8 @@ def wrap_model(
             kwargs["num_mc_samples"] = num_mc_samples
             wrapped_model = SamplePushforwardLaplaceWrapper(**kwargs)
         else:
+            del kwargs["rank"]  # TODO: temporary fix
+            del kwargs["use_eigval_prior"]  # TODO: temporary fix
             wrapped_model = CovariancePushforwardLaplaceWrapper(**kwargs)
     elif model_wrapper_name == "swag":
         kwargs = {
