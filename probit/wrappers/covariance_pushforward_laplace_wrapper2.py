@@ -13,12 +13,12 @@ from einops import rearrange
 from torch import Tensor
 from torch.autograd import grad
 
-from probit.utils.metric import calibration_error
-from probit.utils.normed_ndtr_loss import HBPNormedNdtrNLLLoss, NormedNdtrNLLLoss
-from probit.utils.normed_sigmoid_loss import (
+from probit.losses.normed_ndtr_loss import HBPNormedNdtrNLLLoss, NormedNdtrNLLLoss
+from probit.losses.normed_sigmoid_loss import (
     HBPNormedSigmoidNLLLoss,
     NormedSigmoidNLLLoss,
 )
+from probit.utils.metric import calibration_error
 from probit.wrappers.model_wrapper import DistributionalWrapper
 
 logger = logging.getLogger(__name__)
@@ -216,7 +216,13 @@ class CovariancePushforwardLaplaceWrapper2(DistributionalWrapper):
         super().__init__(model)
         self._load_model(weight_path)
 
-        self.model.fc = extend(self.model.fc)
+        if mask_regex is not None:
+            for name, module in self.model.named_modules():
+                if re.match(rf"^{mask_regex}$", name):
+                    setattr(self.model, name, extend(module))
+        else:
+            self.model = extend(self.model, use_converter=True)
+
         self.loss_fn = extend(loss_fn)
         self.extension = KFAC()
 
@@ -332,7 +338,7 @@ class CovariancePushforwardLaplaceWrapper2(DistributionalWrapper):
     def apply_parameter_mask(self, mask_regex):
         if mask_regex is not None:
             for param_name, param in self.model.named_parameters():
-                if not re.match(mask_regex, param_name):
+                if not re.match(rf"^{mask_regex}.*$", param_name):
                     param.requires_grad = False
 
     def perform_laplace_approximation(self, train_loader, val_loader, channels_last):

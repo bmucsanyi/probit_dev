@@ -11,9 +11,9 @@ from torch import nn
 from torch.distributions import Normal
 from torch.special import log_ndtr, ndtr
 
+from probit.losses.normed_ndtr_loss import NormedNdtrNLLLoss
+from probit.losses.normed_sigmoid_loss import NormedSigmoidNLLLoss
 from probit.utils.ndtr import log_ndtr_approx, ndtr_approx
-from probit.utils.normed_ndtr_loss import NormedNdtrNLLLoss
-from probit.utils.normed_sigmoid_loss import NormedSigmoidNLLLoss
 
 LAMBDA_0 = math.pi / 8
 

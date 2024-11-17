@@ -1,4 +1,4 @@
-"""NLL extention for BCEWithLogits Loss."""
+"""Backpack extension for NormedNdtrNLLLoss."""
 
 import torch
 import torch.nn.functional as F
