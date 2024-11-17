@@ -190,13 +190,14 @@ ignore = [
     "S311",
     # The subprocess module is fine as long as one validates the commands
     "S404",
+    # Ambiguous symbols in docstrings are not of concern for us
+    "RUF002",
+    # Private member access is inevitable with backpack
+    "SLF001",
 ]
 
 [tool.ruff.lint.extend-per-file-ignores]
 "test_*.py" = ["S101"]  # Use of assert is allowed in test files
-"probit/wrappers/swag_wrapper.py" = ["SLF001"]  # Private class accessed in `isinstance`
-# TODO(bmucsanyi): remove when ready
-"probit/wrappers/swag_wrapper_new.py" = ["SLF001"]  # Private class accessed in `isinstance`
 
 [tool.ruff.lint.mccabe]
 max-complexity = 18
