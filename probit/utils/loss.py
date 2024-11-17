@@ -18,11 +18,11 @@ from probit.losses.normed_sigmoid_loss import NormedSigmoidNLLLoss
 
 def get_laplace_loss_fn(predictive):
     if predictive.startswith("softmax"):
-        return nn.CrossEntropyLoss
+        return nn.CrossEntropyLoss()
     if predictive.startswith("probit"):
-        return NormedNdtrNLLLoss
+        return NormedNdtrNLLLoss()
     if predictive.startswith("logit"):
-        return NormedSigmoidNLLLoss
+        return NormedSigmoidNLLLoss()
 
     msg = "Invalid predictive provided"
     raise ValueError(msg)
