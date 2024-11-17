@@ -4,7 +4,6 @@ import gc
 import logging
 import re
 import time
-from copy import deepcopy
 
 import numpy as np
 import torch
@@ -15,6 +14,11 @@ from torch import Tensor
 from torch.autograd import grad
 
 from probit.utils.metric import calibration_error
+from probit.utils.normed_ndtr_loss import HBPNormedNdtrNLLLoss, NormedNdtrNLLLoss
+from probit.utils.normed_sigmoid_loss import (
+    HBPNormedSigmoidNLLLoss,
+    NormedSigmoidNLLLoss,
+)
 from probit.wrappers.model_wrapper import DistributionalWrapper
 
 logger = logging.getLogger(__name__)
@@ -212,7 +216,20 @@ class CovariancePushforwardLaplaceWrapper2(DistributionalWrapper):
         super().__init__(model)
         self._load_model(weight_path)
 
-        self.loss_fn = loss_fn
+        self.model.fc = extend(self.model.fc)
+        self.loss_fn = extend(loss_fn)
+        self.extension = KFAC()
+
+        if isinstance(loss_fn, NormedSigmoidNLLLoss):
+            self.extension.set_module_extension(
+                NormedSigmoidNLLLoss, HBPNormedSigmoidNLLLoss()
+            )
+        elif isinstance(loss_fn, NormedNdtrNLLLoss):
+            self.extension.set_module_extension(
+                NormedNdtrNLLLoss, HBPNormedNdtrNLLLoss()
+            )
+
+        self.extension.set_module_extension()
         self.predictive_fn = predictive_fn
         self.mask_regex = mask_regex
         self.is_laplace_approximated = False
@@ -513,8 +530,6 @@ class CovariancePushforwardLaplaceWrapper2(DistributionalWrapper):
         # Extend model and loss function. The use_converter parameter is used for ResNet
         # compatibility
         device = next(self.model.parameters()).device
-        model = extend(deepcopy(self.model).to(device), use_converter=True)
-        loss_func = extend(deepcopy(self.loss_fn).to(device))
 
         # Forward and backward pass
         X, y = X.to(device), y.to(device)
@@ -522,20 +537,20 @@ class CovariancePushforwardLaplaceWrapper2(DistributionalWrapper):
         if channels_last:
             X = X.contiguous(memory_format=torch.channels_last)
 
-        loss = loss_func(model(X), y)
+        loss = self.loss_fn(self.model(X), y)
 
-        with backpack(KFAC()):
+        with backpack(self.extension):
             loss.backward()
 
         # Extract KFAC matrix from model
         kfac = [
             [elem.detach() for elem in param.kfac]
-            for param in model.parameters()
+            for param in self.model.parameters()
             if param.requires_grad
         ]
 
         # Free GPU memory
-        del model, loss_func, loss
+        del loss
         torch.cuda.empty_cache()
         gc.collect()
 

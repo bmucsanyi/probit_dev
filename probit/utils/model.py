@@ -183,8 +183,8 @@ def wrap_model(
             kwargs["num_mc_samples"] = num_mc_samples
             wrapped_model = SamplePushforwardLaplaceWrapper(**kwargs)
         else:
-            del kwargs["rank"]  # TODO: temporary fix
-            del kwargs["use_eigval_prior"]  # TODO: temporary fix
+            del kwargs["rank"]  # TODO(bmucsanyi): temporary fix
+            del kwargs["use_eigval_prior"]  # TODO(bmucsanyi): temporary fix
             wrapped_model = CovariancePushforwardLaplaceWrapper2(**kwargs)
     elif model_wrapper_name == "swag":
         kwargs = {

@@ -7,10 +7,13 @@ import torch
 import torch.nn.functional as F
 from numpy import sqrt
 from scipy.special import owens_t
+from torch import nn
 from torch.distributions import Normal
 from torch.special import log_ndtr, ndtr
 
 from probit.utils.ndtr import log_ndtr_approx, ndtr_approx
+from probit.utils.normed_ndtr_loss import NormedNdtrNLLLoss
+from probit.utils.normed_sigmoid_loss import NormedSigmoidNLLLoss
 
 LAMBDA_0 = math.pi / 8
 
@@ -444,6 +447,18 @@ def get_predictive(predictive, use_correction, num_mc_samples, approximate):
         predictive_fn = partial(predictive_fn, approximate=approximate)
 
     return predictive_fn
+
+
+def get_laplace_loss_fn(predictive):
+    if predictive.startswith("softmax"):
+        return nn.CrossEntropyLoss
+    if predictive.startswith("probit"):
+        return NormedNdtrNLLLoss
+    if predictive.startswith("logit"):
+        return NormedSigmoidNLLLoss
+
+    msg = "Invalid predictive provided"
+    raise ValueError(msg)
 
 
 DIRICHLET_DICT = {
