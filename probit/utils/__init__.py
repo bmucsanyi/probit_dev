@@ -6,7 +6,7 @@ from .derivative import jvp, vjp
 from .distributed import distribute_bn, init_distributed_device, reduce_tensor
 from .loader import create_loader
 from .logging import log_wandb, setup_logging
-from .loss import create_loss_fn
+from .loss import create_loss_fn, get_laplace_loss_fn
 from .metric import (
     AverageMeter,
     accuracy,
@@ -49,7 +49,6 @@ from .predictive import (
     diag_hessian_softmax,
     get_activation,
     get_dirichlet,
-    get_laplace_loss_fn,
     get_likelihood,
     get_log_activation,
     get_mom_dirichlet_approximation,

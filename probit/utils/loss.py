@@ -12,6 +12,20 @@ from probit.losses import (
     SoftmaxPredictiveNLLLoss,
     UnnormalizedPredictiveNLLLoss,
 )
+from probit.losses.normed_ndtr_loss import NormedNdtrNLLLoss
+from probit.losses.normed_sigmoid_loss import NormedSigmoidNLLLoss
+
+
+def get_laplace_loss_fn(predictive):
+    if predictive.startswith("softmax"):
+        return nn.CrossEntropyLoss
+    if predictive.startswith("probit"):
+        return NormedNdtrNLLLoss
+    if predictive.startswith("logit"):
+        return NormedSigmoidNLLLoss
+
+    msg = "Invalid predictive provided"
+    raise ValueError(msg)
 
 
 def create_loss_fn(args, num_batches):
