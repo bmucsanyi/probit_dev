@@ -13,16 +13,9 @@ from torch.special import log_ndtr, ndtr
 
 from probit.losses.normed_ndtr_loss import NormedNdtrNLLLoss
 from probit.losses.normed_sigmoid_loss import NormedSigmoidNLLLoss
+from probit.utils.ndtr import log_ndtr_approx, ndtr_approx
 
 LAMBDA_0 = math.pi / 8
-
-
-def log_ndtr_approx(x):
-    return F.logsigmoid(math.sqrt(8 / math.pi) * (x + 0.044715 * x**3))
-
-
-def ndtr_approx(x):
-    return F.sigmoid(math.sqrt(8 / math.pi) * (x + 0.044715 * x**3))
 
 
 def softmax_laplace_bridge(

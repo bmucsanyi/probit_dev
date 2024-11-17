@@ -7,7 +7,7 @@ from backpack.extensions.secondorder.hbp.losses import HBPLoss
 from torch import Tensor
 from torch.distributions import Categorical
 
-from probit.losses.predictive import log_normed_ndtr, ndtr
+from probit.utils.predictive import log_normed_ndtr, ndtr
 
 
 class HBPNormedNdtrNLLLoss(HBPLoss):

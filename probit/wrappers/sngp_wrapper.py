@@ -13,12 +13,12 @@ from torch import nn
 from torch.nn.modules.batchnorm import _NormBase  # noqa: PLC2701
 from torch.nn.parameter import is_lazy
 
-from probit.losses.predictive import (
+from probit.utils import calculate_output_padding, calculate_same_padding
+from probit.utils.predictive import (
     diag_hessian_normalized_normcdf,
     diag_hessian_normalized_sigmoid,
     diag_hessian_softmax,
 )
-from probit.utils import calculate_output_padding, calculate_same_padding
 from probit.utils.replace import register, register_cond, replace
 from probit.wrappers.model_wrapper import DistributionalWrapper
 

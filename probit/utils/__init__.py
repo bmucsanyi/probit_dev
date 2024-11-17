@@ -33,6 +33,7 @@ from .metric import (
     spearmanr,
 )
 from .model import create_model, wrap_model
+from .ndtr import log_ndtr_approx, ndtr_approx
 from .parsing import (
     float_tuple,
     int_tuple,
@@ -40,6 +41,19 @@ from .parsing import (
     parse_args,
     resolve_data_config,
     string_tuple,
+)
+from .predictive import (
+    PREDICTIVE_DICT,
+    diag_hessian_normalized_normcdf,
+    diag_hessian_normalized_sigmoid,
+    diag_hessian_softmax,
+    get_activation,
+    get_dirichlet,
+    get_laplace_loss_fn,
+    get_likelihood,
+    get_log_activation,
+    get_mom_dirichlet_approximation,
+    get_predictive,
 )
 from .random import set_random_seed
 from .replace import (
@@ -55,6 +69,7 @@ from .timm import optimizer_kwargs, scheduler_kwargs
 from .transform import create_transform, hard_target_transform
 
 __all__ = [
+    "PREDICTIVE_DICT",
     "AverageMeter",
     "CheckpointSaver",
     "DefaultContext",
@@ -80,10 +95,20 @@ __all__ = [
     "cross_entropy",
     "deep_setattr",
     "dempster_shafer_metric",
+    "diag_hessian_normalized_normcdf",
+    "diag_hessian_normalized_sigmoid",
+    "diag_hessian_softmax",
     "distribute_bn",
     "entropy",
     "excess_area_under_risk_coverage_curve",
     "float_tuple",
+    "get_activation",
+    "get_dirichlet",
+    "get_laplace_loss_fn",
+    "get_likelihood",
+    "get_log_activation",
+    "get_mom_dirichlet_approximation",
+    "get_predictive",
     "get_ranks",
     "hard_target_transform",
     "init_distributed_device",
@@ -93,9 +118,11 @@ __all__ = [
     "kl_divergence",
     "kwargs",
     "kwargs",
+    "log_ndtr_approx",
     "log_wandb",
     "multiclass_brier",
     "multiclass_log_probability",
+    "ndtr_approx",
     "optimizer_kwargs",
     "parse_args",
     "pearsonr",
