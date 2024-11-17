@@ -458,6 +458,12 @@ group.add_argument(
     help="Input batch size for training",
 )
 group.add_argument(
+    "--trainable-param-pattern",
+    type=str,
+    default=None,
+    help="Regex pattern for trainable params. Discarded when None",
+)
+group.add_argument(
     "--accumulation-steps",
     type=int,
     default=16,

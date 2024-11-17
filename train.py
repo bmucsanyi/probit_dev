@@ -12,7 +12,7 @@ import torch.distributed
 from timm.optim import create_optimizer_v2
 from timm.scheduler import create_scheduler_v2
 from torch.nn.parallel import DistributedDataParallel
-
+import re
 from probit.utils import (
     AverageMeter,
     CheckpointSaver,
@@ -467,8 +467,14 @@ def main():
         )
 
     setup_learning_rate(args)
+
+    if args.trainable_param_pattern is not None:
+        for name, param in model.named_parameters():
+            if not re.match(args.trainable_param_pattern, name):
+                param.requires_grad_(False)
+
     optimizer = create_optimizer_v2(
-        model,
+        [param for param in model.parameters() if param.requires_grad],
         **optimizer_kwargs(args=args),
     )
     setup_compile(model, args)
