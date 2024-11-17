@@ -542,17 +542,18 @@ class CovariancePushforwardLaplaceWrapper2(DistributionalWrapper):
         if channels_last:
             X = X.contiguous(memory_format=torch.channels_last)
 
-        loss = self.loss_fn(self.model(X), y)
+        with torch.enable_grad():
+            loss = self.loss_fn(self.model(X), y)
 
-        with backpack(self.extension):
-            loss.backward()
+            with backpack(self.extension):
+                loss.backward()
 
-        # Extract KFAC matrix from model
-        kfac = [
-            [elem.detach() for elem in param.kfac]
-            for param in self.model.parameters()
-            if param.requires_grad
-        ]
+            # Extract KFAC matrix from model
+            kfac = [
+                [elem.detach() for elem in param.kfac]
+                for param in self.model.parameters()
+                if param.requires_grad
+            ]
 
         # Free GPU memory
         del loss
