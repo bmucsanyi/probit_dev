@@ -2,7 +2,7 @@
 
 from torch import nn
 
-from probit.utils.predictive import PREDICTIVE_DICT
+from probit.losses.predictive import PREDICTIVE_DICT
 
 
 class SoftmaxPredictiveNLLLoss(nn.Module):

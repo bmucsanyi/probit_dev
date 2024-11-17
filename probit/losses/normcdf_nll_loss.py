@@ -5,7 +5,7 @@ import torch.nn.functional as F
 from torch import nn
 from torch.special import log_ndtr
 
-from probit.utils.ndtr import log_ndtr_approx
+from probit.losses.predictive import log_ndtr_approx
 
 
 class NormCDFNLLLoss(nn.Module):

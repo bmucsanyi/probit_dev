@@ -5,8 +5,7 @@ import torch.nn.functional as F
 from torch import nn
 from torch.special import ndtr
 
-from probit.utils.ndtr import ndtr_approx
-from probit.utils.predictive import get_predictive
+from probit.losses.predictive import get_predictive, ndtr_approx
 
 
 class RegularizedPredictiveNLLLoss(nn.Module):

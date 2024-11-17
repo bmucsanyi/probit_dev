@@ -4,7 +4,7 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 
-from probit.utils.predictive import get_predictive
+from probit.losses.predictive import get_predictive
 
 
 class BMACrossEntropyLoss(nn.Module):
