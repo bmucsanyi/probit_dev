@@ -235,7 +235,6 @@ class CovariancePushforwardLaplaceWrapper2(DistributionalWrapper):
                 NormedNdtrNLLLoss, HBPNormedNdtrNLLLoss()
             )
 
-        self.extension.set_module_extension()
         self.predictive_fn = predictive_fn
         self.mask_regex = mask_regex
         self.is_laplace_approximated = False
