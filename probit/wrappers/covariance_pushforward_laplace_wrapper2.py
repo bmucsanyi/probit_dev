@@ -463,10 +463,10 @@ class CovariancePushforwardLaplaceWrapper2(DistributionalWrapper):
                     alpha2=batch_size / new_num_data,
                 )
 
-            # Free VRAM
-            del mb_kfac
-            torch.cuda.empty_cache()
-            gc.collect()
+                # Free VRAM
+                del mb_kfac
+                torch.cuda.empty_cache()
+                gc.collect()
 
             # Update number of data points
             num_data = new_num_data
