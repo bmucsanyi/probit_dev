@@ -242,6 +242,15 @@ class CovariancePushforwardLaplaceWrapper2(DistributionalWrapper):
         if mask_regex is not None:
             self.apply_parameter_mask(mask_regex=mask_regex)
 
+        print(
+            "Number of Laplace-approximated parameters:",
+            sum(
+                param.numel()
+                for param in self.model.parameters()
+                if param.requires_grad
+            ),
+        )
+
     def forward(self, batch):
         if not self.is_laplace_approximated:
             msg = "Model has to be Laplace approximated first"
