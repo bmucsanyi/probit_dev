@@ -945,6 +945,7 @@ def validate(
     batch_time_m = AverageMeter()
     losses_m = AverageMeter()
     top_1_m = AverageMeter()
+    normalization_factor_m = AverageMeter()
 
     model.eval()
 
@@ -968,6 +969,16 @@ def validate(
                 if not args.predictive.endswith("mc"):
                     logit = predictive_fn(mean, var, return_logits=True)
                     log_act_fn = get_log_activation(args.predictive, args.approximate)
+
+                    if not args.predictive.startswith("softmax"):
+                        unnormalized_act_fn = get_activation(
+                            args.predictive, args.approximate, unnormalized=True
+                        )
+                        normalization_factor_m.update(
+                            unnormalized_act_fn(logit).sum(dim=-1).item(),
+                            input.shape[0],
+                        )
+
                     log_prob = log_act_fn(logit)
                 else:
                     prob = predictive_fn(mean, var)
@@ -977,6 +988,16 @@ def validate(
                 if output.shape[1] == 1:
                     output = output.squeeze()
                     log_act_fn = get_log_activation(args.predictive, args.approximate)
+
+                    if not args.predictive.startswith("softmax"):
+                        unnormalized_act_fn = get_activation(
+                            args.predictive, args.approximate, unnormalized=True
+                        )
+                        normalization_factor_m.update(
+                            unnormalized_act_fn(logit).sum(dim=-1).item(),
+                            input.shape[0],
+                        )
+
                     log_prob = log_act_fn(output)
                 else:
                     act_fn = get_activation(args.predictive, args.approximate)
@@ -1014,6 +1035,9 @@ def validate(
         end = time.time()
 
     metrics = {"val_loss": losses_m.avg, "val_top_1_accuracy": top_1_m.avg}
+
+    if normalization_factor_m.count > 0:
+        metrics["val_norm_factor"] = normalization_factor_m.avg
 
     return metrics
 
