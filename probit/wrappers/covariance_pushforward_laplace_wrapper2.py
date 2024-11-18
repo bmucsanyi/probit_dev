@@ -97,7 +97,7 @@ def jac(f: Tensor, x: Tensor) -> Tensor:
         Jacobian tensor of f w.r.t. x. Has shape
         (*f.shape, *x.shape).
     """
-    J = torch.zeros(f.shape + x.shape)
+    J = torch.zeros(f.shape + x.shape, device=f.device)
 
     for d in torch.arange(f.numel()):
         d_unraveled = torch.unravel_index(d, f.shape)
@@ -273,7 +273,7 @@ class CovariancePushforwardLaplaceWrapper2(DistributionalWrapper):
                 result.add_((jacobian_T * matmat).sum(dim=0))  # [C]
 
                 # Free VRAM
-                del param, param_kfac, jacobian_T, A, B, matmat
+                del param, param_kfac, jacobian_T, A, matmat
                 torch.cuda.empty_cache()
                 gc.collect()
             var[i] = result
