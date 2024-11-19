@@ -202,9 +202,10 @@ def initialize_lazy_modules(
         args.batch_size,
         *tuple(data_config["input_size"]),
     ).to(device)
+    dummy_target = torch.randint(0, 10, (args.batch_size,)).to(device)
 
     with amp_autocast():
-        model(dummy_input)
+        model(dummy_input, dummy_target)
 
 
 def train(
