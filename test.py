@@ -1137,10 +1137,9 @@ def get_bundle(
     ):
         if is_distributional:
             if link == "probit":
-                suffixes = ["link_normcdf_output", "link_sigmoid_output", "link_mc"]
+                suffixes = ["link_normcdf_output", "link_mc"]
             elif link == "logit":
                 suffixes = [
-                    "link_normcdf_output",
                     "link_sigmoid_output",
                     "link_sigmoid_product_output",
                     "link_mc",
@@ -1170,10 +1169,9 @@ def get_bundle(
         if link == "softmax":
             suffixes = ["laplace_bridge", "mean_field", "mc"]
         elif link == "probit":
-            suffixes = ["link_normcdf_output", "link_sigmoid_output", "link_mc"]
+            suffixes = ["link_normcdf_output", "link_mc"]
         elif link == "logit":
             suffixes = [
-                "link_normcdf_output",
                 "link_sigmoid_output",
                 "link_sigmoid_product_output",
                 "link_mc",
@@ -1322,22 +1320,14 @@ def convert_inference_res(inference_res, time_forward, args):
 
     if len(inference_res) == 2:
         mean, var = inference_res
-        # TODO(bmucsanyi): ask Nathaël if this is the only predictive we want to use in
-        # the eval or others as well (e.g., does the output_function matter a lot for
-        # training HET? For others I think we should evaluate all predictives with the
-        # same link function. For HET, we could also do that and just choose an
-        # arbitrary predictive for training...)
 
-        # TODO(bmucsanyi): create the containers very thoroughly, based on the following
-        # if-else structure
         link = args.predictive.split("_")[0]
         if link == "softmax":
             suffixes = ["laplace_bridge", "mean_field", "mc"]
         elif link == "probit":
-            suffixes = ["link_normcdf_output", "link_sigmoid_output", "link_mc"]
+            suffixes = ["link_normcdf_output", "link_mc"]
         elif link == "logit":
             suffixes = [
-                "link_normcdf_output",
                 "link_sigmoid_output",
                 "link_sigmoid_product_output",
                 "link_mc",
@@ -1378,9 +1368,15 @@ def convert_inference_res(inference_res, time_forward, args):
 
     elif len(inference_res) == 1 and inference_res[0].ndim == 3:
         samples = inference_res[0]
+
+        if samples.shape[0] < 1000:
+            msg = "Too few MC samples provided"
+            raise ValueError(msg)
+
         act_fn = get_activation(args.predictive, args.approximate)
         for i in [10, 100, 1000]:
-            handle_samples(samples, converted_inference_res, act_fn, i)
+            samples_i = samples[:, :i, :]
+            handle_samples(samples_i, converted_inference_res, act_fn, i)
     elif len(inference_res) == 1 and inference_res[0].ndim == 2:
         alpha = inference_res[0]
         handle_alpha(alpha, converted_inference_res, "edl")
