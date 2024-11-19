@@ -1368,15 +1368,19 @@ def convert_inference_res(inference_res, time_forward, args):
 
     elif len(inference_res) == 1 and inference_res[0].ndim == 3:
         samples = inference_res[0]
-
-        if samples.shape[1] < 1000:
-            msg = "Too few MC samples provided"
-            raise ValueError(msg)
-
         act_fn = get_activation(args.predictive, args.approximate)
-        for i in [10, 100, 1000]:
-            samples_i = samples[:, :i, :]
-            handle_samples(samples_i, converted_inference_res, act_fn, i)
+
+        if samples.shape[1] > 1:
+            if samples.shape[1] < 1000:
+                msg = "Too few MC samples provided"
+                raise ValueError(msg)
+
+            for i in [10, 100, 1000]:
+                samples_i = samples[:, :i, :]
+                handle_samples(samples_i, converted_inference_res, act_fn, i)
+        else:
+            for i in [10, 100, 1000]:  # Needed to fill up containers
+                handle_samples(samples, converted_inference_res, act_fn, i)
     elif len(inference_res) == 1 and inference_res[0].ndim == 2:
         alpha = inference_res[0]
         handle_alpha(alpha, converted_inference_res, "edl")
