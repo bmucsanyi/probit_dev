@@ -530,9 +530,10 @@ def get_activation(predictive, approximate, *, unnormalized=False):
 
     if predictive.startswith("softmax"):
         return partial(F.softmax, dim=-1)
+
     if predictive.startswith("probit"):
         fn = normed_ndtr_approx if approximate else normed_ndtr
-    if predictive.startswith("logit"):
+    elif predictive.startswith("logit"):
         fn = normed_sigmoid
     else:
         msg = "Invalid predictive provided"
