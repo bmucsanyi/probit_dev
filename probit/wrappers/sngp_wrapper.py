@@ -576,7 +576,7 @@ class Conv2dSpectralNormalizer(nn.Module):
         )
 
         # Estimate largest singular value
-        sigma = weight_v.view(-1) @ u.view(-1)
+        sigma = weight_v.contiguous().view(-1) @ u.view(-1)
 
         # Calculate factor to divide weight by; pay attention to numerical stability
         division_factor = torch.max(
@@ -811,7 +811,7 @@ class Conv2dSpectralNormalizer(nn.Module):
             )
 
             self._v = F.normalize(
-                input=v_shaped.view(-1), dim=0, eps=self.eps, out=self._v
+                input=v_shaped.contiguous().view(-1), dim=0, eps=self.eps, out=self._v
             )
 
             v_padded = F.pad(
@@ -828,7 +828,7 @@ class Conv2dSpectralNormalizer(nn.Module):
             )
 
             self._u = F.normalize(
-                input=u_shaped.view(-1), dim=0, eps=self.eps, out=self._u
+                input=u_shaped.contiguous().view(-1), dim=0, eps=self.eps, out=self._u
             )
 
 
