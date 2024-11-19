@@ -959,59 +959,61 @@ def validate(
 
         with amp_autocast():
             output = model(input)
-            if len(output) == 2:  # mean, var
-                predictive_fn = get_predictive(
-                    args.predictive,
-                    args.use_correction,
-                    args.num_mc_samples,
-                    args.approximate,
-                )
-                mean, var = output
-                if not args.predictive.endswith("mc"):
-                    logit = predictive_fn(mean, var, return_logits=True)
-                    log_act_fn = get_log_activation(args.predictive, args.approximate)
+        output = tuple(out.float() for out in output)
 
-                    if not args.predictive.startswith("softmax"):
-                        unnormalized_act_fn = get_activation(
-                            args.predictive, args.approximate, unnormalized=True
-                        )
-                        normalization_factor_m.update(
-                            unnormalized_act_fn(logit).sum(dim=-1).mean().item(),
-                            input.shape[0],
-                        )
+        if len(output) == 2:  # mean, var
+            predictive_fn = get_predictive(
+                args.predictive,
+                args.use_correction,
+                args.num_mc_samples,
+                args.approximate,
+            )
+            mean, var = output
+            if not args.predictive.endswith("mc"):
+                logit = predictive_fn(mean, var, return_logits=True)
+                log_act_fn = get_log_activation(args.predictive, args.approximate)
 
-                    log_prob = log_act_fn(logit)
-                else:
-                    prob = predictive_fn(mean, var)
-                    log_prob = prob.log().clamp(torch.finfo(prob.dtype).min)
-            elif len(output) == 1 and output[0].ndim == 3:  # [B, S, C]
-                output = output[0]
-                if output.shape[1] == 1:
-                    output = output.squeeze()
-                    log_act_fn = get_log_activation(args.predictive, args.approximate)
-
-                    if not args.predictive.startswith("softmax"):
-                        unnormalized_act_fn = get_activation(
-                            args.predictive, args.approximate, unnormalized=True
-                        )
-                        normalization_factor_m.update(
-                            unnormalized_act_fn(output).sum(dim=-1).mean().item(),
-                            input.shape[0],
-                        )
-
-                    log_prob = log_act_fn(output)
-                else:
-                    act_fn = get_activation(args.predictive, args.approximate)
-                    log_prob = (
-                        act_fn(output)
-                        .mean(dim=1)
-                        .log()
-                        .clamp(torch.finfo(output.dtype).min)
+                if not args.predictive.startswith("softmax"):
+                    unnormalized_act_fn = get_activation(
+                        args.predictive, args.approximate, unnormalized=True
                     )
-            elif len(output) == 1 and output[0].ndim == 2:  # alpha
-                output = output[0]
-                prob = output / output.sum(dim=-1, keepdim=True)
+                    normalization_factor_m.update(
+                        unnormalized_act_fn(logit).sum(dim=-1).mean().item(),
+                        input.shape[0],
+                    )
+
+                log_prob = log_act_fn(logit)
+            else:
+                prob = predictive_fn(mean, var)
                 log_prob = prob.log().clamp(torch.finfo(prob.dtype).min)
+        elif len(output) == 1 and output[0].ndim == 3:  # [B, S, C]
+            output = output[0]
+            if output.shape[1] == 1:
+                output = output.squeeze()
+                log_act_fn = get_log_activation(args.predictive, args.approximate)
+
+                if not args.predictive.startswith("softmax"):
+                    unnormalized_act_fn = get_activation(
+                        args.predictive, args.approximate, unnormalized=True
+                    )
+                    normalization_factor_m.update(
+                        unnormalized_act_fn(output).sum(dim=-1).mean().item(),
+                        input.shape[0],
+                    )
+
+                log_prob = log_act_fn(output)
+            else:
+                act_fn = get_activation(args.predictive, args.approximate)
+                log_prob = (
+                    act_fn(output)
+                    .mean(dim=1)
+                    .log()
+                    .clamp(torch.finfo(output.dtype).min)
+                )
+        elif len(output) == 1 and output[0].ndim == 2:  # alpha
+            output = output[0]
+            prob = output / output.sum(dim=-1, keepdim=True)
+            log_prob = prob.log().clamp(torch.finfo(prob.dtype).min)
 
         if target.ndim == 2:
             target = target[:, -1]
