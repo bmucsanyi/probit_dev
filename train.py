@@ -976,7 +976,7 @@ def validate(
                             args.predictive, args.approximate, unnormalized=True
                         )
                         normalization_factor_m.update(
-                            unnormalized_act_fn(logit).sum(dim=-1).item(),
+                            unnormalized_act_fn(logit).sum(dim=-1).mean().item(),
                             input.shape[0],
                         )
 
@@ -995,7 +995,7 @@ def validate(
                             args.predictive, args.approximate, unnormalized=True
                         )
                         normalization_factor_m.update(
-                            unnormalized_act_fn(output).sum(dim=-1).item(),
+                            unnormalized_act_fn(output).sum(dim=-1).mean().item(),
                             input.shape[0],
                         )
 
