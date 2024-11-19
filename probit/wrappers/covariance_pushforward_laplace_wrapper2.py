@@ -358,12 +358,11 @@ class CovariancePushforwardLaplaceWrapper2(DistributionalWrapper):
         ).detach()
         self.prior_precision = 1.0
         self.kfac = self.get_covariance_kfac_loader(train_loader, channels_last)
+        self.is_laplace_approximated = True
 
         self.prior_precision = self.optimize_prior_precision_cv(
             val_loader, channels_last
         )
-
-        self.is_laplace_approximated = True
 
     @staticmethod
     def get_ece(out_dist, targets):

@@ -571,7 +571,7 @@ group.add_argument(
     help="Predictive for evaluation (and training for HET)",
 )
 group.add_argument(
-    "--use-correction",
+    "--do-not-use-correction",
     action="store_true",
     help="Whether to use the correction in Laplace bridge",
 )
@@ -661,6 +661,8 @@ def parse_args():
 
     if str(args.soft_imagenet_label_dir) == "SLURM_TUE":
         args.soft_imagenet_label_dir = SLURM_TUE_PATH
+
+    args.use_correction = not args.do_not_use_correction
 
     return args
 
