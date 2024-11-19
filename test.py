@@ -1369,7 +1369,7 @@ def convert_inference_res(inference_res, time_forward, args):
     elif len(inference_res) == 1 and inference_res[0].ndim == 3:
         samples = inference_res[0]
 
-        if samples.shape[0] < 1000:
+        if samples.shape[1] < 1000:
             msg = "Too few MC samples provided"
             raise ValueError(msg)
 
