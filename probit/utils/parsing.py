@@ -576,6 +576,11 @@ group.add_argument(
     help="Whether to use the correction in Laplace bridge",
 )
 group.add_argument(
+    "--use-correction",
+    action="store_true",
+    help="Discarded. Only for backwards compatibility",
+)
+group.add_argument(
     "--use-eigval-prior",
     action="store_true",
     help="Whether to use the eigenvalue prior in Laplace",
