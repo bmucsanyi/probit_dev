@@ -211,6 +211,7 @@ class CovariancePushforwardLaplaceWrapper2(DistributionalWrapper):
         loss_fn,
         predictive_fn,
         mask_regex,
+        prior_precision,
         weight_path,
     ):
         super().__init__(model)
@@ -234,6 +235,8 @@ class CovariancePushforwardLaplaceWrapper2(DistributionalWrapper):
             self.extension.set_module_extension(
                 NormedNdtrNLLLoss, HBPNormedNdtrNLLLoss()
             )
+
+        self.prior_precision = prior_precision
 
         self.predictive_fn = predictive_fn
         self.mask_regex = mask_regex
@@ -349,20 +352,33 @@ class CovariancePushforwardLaplaceWrapper2(DistributionalWrapper):
                 if not re.match(rf"^{mask_regex}.*$", param_name):
                     param.requires_grad = False
 
-    def perform_laplace_approximation(self, train_loader, val_loader, channels_last):
+    def perform_laplace_approximation(
+        self,
+        train_loader,
+        val_loader,
+        channels_last,
+        log_prior_prec_min=-1,
+        log_prior_prec_max=2,
+        grid_size=50,
+    ):
         self.theta_0_list = [
             param for param in self.model.parameters() if param.requires_grad
         ]
         self.theta_0_vec = torch.nn.utils.parameters_to_vector(
             self.theta_0_list
         ).detach()
-        self.prior_precision = 1.0
         self.kfac = self.get_covariance_kfac_loader(train_loader, channels_last)
         self.is_laplace_approximated = True
 
-        self.prior_precision = self.optimize_prior_precision_cv(
-            val_loader, channels_last
-        )
+        if self.prior_precision is None:
+            self.prior_precision = 1.0
+            self.prior_precision = self.optimize_prior_precision_cv(
+                val_loader,
+                channels_last,
+                log_prior_prec_min,
+                log_prior_prec_max,
+                grid_size,
+            )
 
     @staticmethod
     def get_ece(out_dist, targets):

@@ -440,6 +440,7 @@ def main():
             approximate=args.approximate,
         ),
         use_eigval_prior=args.use_eigval_prior,
+        prior_precision=args.prior_precision,
         gp_likelihood=args.gp_likelihood,
         approximate=args.approximate,
         verbose=args.rank == 0,
@@ -1054,7 +1055,12 @@ def update_post_hoc_method(model, train_loader, hard_id_eval_loader, args):
             msg = "For Laplace approximation, the ID eval loader has to be specified."
             raise ValueError(msg)
         model.perform_laplace_approximation(
-            train_loader, hard_id_eval_loader, args.channels_last
+            train_loader,
+            hard_id_eval_loader,
+            args.channels_last,
+            args.log_prior_prec_min,
+            args.log_prior_prec_max,
+            args.grid_size,
         )
     elif isinstance(model, SWAGWrapper):
         model.get_mc_samples(

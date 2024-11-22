@@ -585,6 +585,30 @@ group.add_argument(
     action="store_true",
     help="Whether to use the eigenvalue prior in Laplace",
 )
+group.add_argument(
+    "--prior-precision",
+    type=float,
+    default=None,
+    help="Sets a prior precision in Laplace",
+)
+group.add_argument(
+    "--log_prior_prec_min",
+    type=float,
+    default=-1,
+    help="Prior precision lower bound in Laplace grid search",
+)
+group.add_argument(
+    "--log_prior_prec_max",
+    type=float,
+    default=2,
+    help="Prior precision upper bound in Laplace grid search",
+)
+group.add_argument(
+    "--grid-size",
+    type=int,
+    default=50,
+    help="Prior precision grid size in Laplace grid search",
+)
 
 # Misc
 group = parser.add_argument_group("Miscellaneous parameters")

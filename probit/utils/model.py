@@ -152,6 +152,7 @@ def wrap_model(
     loss_fn,
     predictive_fn,
     use_eigval_prior,
+    prior_precision,
     gp_likelihood,
     approximate,
     verbose,
@@ -177,6 +178,7 @@ def wrap_model(
             "rank": matrix_rank,
             "use_eigval_prior": use_eigval_prior,
             "mask_regex": mask_regex,
+            "prior_precision": prior_precision,
             "weight_path": weight_paths[0],
         }
         if use_sampling:
