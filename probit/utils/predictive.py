@@ -453,11 +453,13 @@ DIRICHLET_DICT = {
 }
 
 
-def get_dirichlet(dirichlet, approximate):
-    dirichlet = DIRICHLET_DICT[dirichlet]
+def get_dirichlet(dirichlet_str, approximate):
+    dirichlet_fn = DIRICHLET_DICT[dirichlet_str]
 
-    if dirichlet.startswith("probit"):
-        dirichlet = partial(dirichlet, approximate=approximate)
+    if dirichlet_str.startswith("probit"):
+        dirichlet_fn = partial(dirichlet_fn, approximate=approximate)
+
+    return dirichlet_fn
 
 
 def get_likelihood(predictive):
