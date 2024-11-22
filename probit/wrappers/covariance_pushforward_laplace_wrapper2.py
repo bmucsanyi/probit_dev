@@ -268,7 +268,9 @@ class CovariancePushforwardLaplaceWrapper2(DistributionalWrapper):
                 logit = self.model(x.unsqueeze(0))[0]
                 mean[i] = logit
             result = torch.zeros((logit.shape[0],), device=logit.device)
-            for param, param_kfac in zip(self.theta_0_list, self.kfac, strict=True):
+            for param, param_kfac in zip(
+                self.theta_0_list, self.covariance_kfac, strict=True
+            ):
                 # Compute dense Jacobian
                 with torch.enable_grad():
                     jacobian_T = (
@@ -367,11 +369,10 @@ class CovariancePushforwardLaplaceWrapper2(DistributionalWrapper):
         self.theta_0_vec = torch.nn.utils.parameters_to_vector(
             self.theta_0_list
         ).detach()
-        self.kfac = self.get_covariance_kfac_loader(train_loader, channels_last)
+        self.kfac = self.get_kfac_loader(train_loader, channels_last)
         self.is_laplace_approximated = True
 
         if self.prior_precision is None:
-            self.prior_precision = 1.0
             self.prior_precision = self.optimize_prior_precision_cv(
                 val_loader,
                 channels_last,
@@ -379,6 +380,8 @@ class CovariancePushforwardLaplaceWrapper2(DistributionalWrapper):
                 log_prior_prec_max,
                 grid_size,
             )
+
+        self.covariance_kfac = self.get_covariance_kfac(self.kfac, self.prior_precision)
 
     @staticmethod
     def get_ece(out_dist, targets):
@@ -418,6 +421,9 @@ class CovariancePushforwardLaplaceWrapper2(DistributionalWrapper):
             logger.info(f"Trying {prior_prec}...")
             start_time = time.perf_counter()
             self.prior_precision = prior_prec
+            self.covariance_kfac = self.get_covariance_kfac(
+                self.kfac, self.prior_precision
+            )
 
             try:
                 out_dist, targets = self.validate(
@@ -461,7 +467,7 @@ class CovariancePushforwardLaplaceWrapper2(DistributionalWrapper):
 
         return torch.cat(output_means, dim=0), torch.cat(targets, dim=0)
 
-    def get_covariance_kfac_loader(self, train_loader, channels_last):
+    def get_kfac_loader(self, train_loader, channels_last):
         """Compute the KFAC approximation based on a list of mini-batches `datalist`."""
         # Accumulate KFAC approximations over all mini-batches
         num_data = 0
@@ -494,8 +500,6 @@ class CovariancePushforwardLaplaceWrapper2(DistributionalWrapper):
 
             # Update number of data points
             num_data = new_num_data
-
-        kfac = self.get_covariance_kfac(kfac, self.prior_precision)
 
         return kfac
 
