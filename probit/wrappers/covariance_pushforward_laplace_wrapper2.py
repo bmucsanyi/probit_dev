@@ -401,13 +401,15 @@ class CovariancePushforwardLaplaceWrapper2(DistributionalWrapper):
         grid_size=50,
     ):
         interval = torch.logspace(log_prior_prec_min, log_prior_prec_max, grid_size)
-        self.prior_precision = self.gridsearch(
+        prior_precision = self.gridsearch(
             interval=interval,
             val_loader=val_loader,
             channels_last=channels_last,
         )
 
-        logger.info(f"Optimized prior precision is {self.prior_precision}.")
+        logger.info(f"Optimized prior precision is {prior_precision}.")
+
+        return prior_precision
 
     def gridsearch(
         self,
