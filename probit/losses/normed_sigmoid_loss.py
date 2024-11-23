@@ -70,13 +70,13 @@ class NormedSigmoidNLLLossDerivatives(NLLLossDerivatives):
             Categorical distribution with probabilities from the subsampled_input.
         """
         elementwise_probs = subsampled_input.sigmoid()
-        probs = elementwise_probs / elementwise_probs.sum(dim=-1, keepdim=True)
+        probs = elementwise_probs / elementwise_probs.sum(dim=1, keepdim=True)
 
         return Categorical(probs=probs)
 
     @staticmethod
     def _get_mean_normalization(input: Tensor) -> int:
-        return input.shape[0]
+        return input.numel() // input.shape[1]
 
     @staticmethod
     def hessian_is_psd() -> bool:
