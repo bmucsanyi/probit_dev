@@ -22,6 +22,7 @@ from probit.utils import (
     excess_area_under_risk_coverage_curve,
     get_activation,
     get_dirichlet,
+    get_log_activation,
     get_predictive,
     multiclass_brier,
     multiclass_log_probability,
@@ -1329,10 +1330,9 @@ def handle_alpha(alpha, converted_inference_res, prefix):
     converted_inference_res[f"{prefix}_dirichlet_jensen_shannon_divergences"] = jsd
 
 
-def handle_bma(bma, converted_inference_res, prefix):
-    min_real = torch.finfo(bma.dtype).min
-    log_bma = bma.log().clamp(min=min_real)  # [B, C]
+def handle_bma(log_bma, converted_inference_res, prefix):
     converted_inference_res[f"{prefix}_log_bmas"] = log_bma
+    bma = log_bma.exp()
 
     entropies_of_bma = entropy(bma)
     converted_inference_res[f"{prefix}_entropies_of_bma"] = entropies_of_bma
@@ -1377,14 +1377,16 @@ def convert_inference_res(inference_res, time_forward, args):
                     mc_predictive_fn = get_predictive(
                         predictive_name, args.use_correction, i, args.approximate
                     )
-                    bma, samples = mc_predictive_fn(
+                    _, samples = mc_predictive_fn(
                         mean, var, return_samples=True
                     )  # [B, C]
                     act_fn = get_activation(predictive_name, args.approximate)
                     handle_samples(samples, converted_inference_res, act_fn, i)
             else:
-                bma = predictive_fn(mean, var)
-                handle_bma(bma, converted_inference_res, suffix)
+                logit = predictive_fn(mean, var, return_logits=True)
+                log_act_fn = get_log_activation(args.predictive, args.approximate)
+                log_bma = log_act_fn(logit)
+                handle_bma(log_bma, converted_inference_res, suffix)
 
         if link != "softmax":
             for suffix in suffixes:
