@@ -380,8 +380,6 @@ def evaluate_on_correctness_prediction(
     if "mc_10_entropies_of_bma" in estimates:
         for i in [10, 100, 1000]:
             prefixes.append(f"mc_{i}")  # noqa: PERF401
-    if "dirichlet_entropies_of_bma" in estimates:
-        prefixes.append("dirichlet")
     if "link_normcdf_output_entropies_of_bma" in estimates:
         prefixes.append("link_normcdf_output")
     if "link_sigmoid_output_entropies_of_bma" in estimates:
@@ -390,6 +388,14 @@ def evaluate_on_correctness_prediction(
         prefixes.append("laplace_bridge")
     if "mean_field_entropies_of_bma" in estimates:
         prefixes.append("mean_field")
+    if "edl_dirichlet_entropies_of_bma" in estimates:
+        prefixes.append("edl_dirichlet")
+    if "link_normcdf_output_dirichlet_entropies_of_bma" in estimates:
+        prefixes.append("link_normcdf_output_dirichlet")
+    if "link_sigmoid_output_dirichlet_entropies_of_bma" in estimates:
+        prefixes.append("link_sigmoid_output_dirichlet")
+    if "link_sigmoid_product_output_dirichlet_entropies_of_bma" in estimates:
+        prefixes.append("link_sigmoid_product_output_dirichlet")
 
     for prefix in prefixes:
         gt_hard_bma_correctnesses_original = targets[
@@ -458,8 +464,6 @@ def evaluate_on_abstained_prediction(
     if "mc_10_entropies_of_bma" in estimates:
         for i in [10, 100, 1000]:
             prefixes.append(f"mc_{i}")  # noqa: PERF401
-    if "dirichlet_entropies_of_bma" in estimates:
-        prefixes.append("dirichlet")
     if "link_normcdf_output_entropies_of_bma" in estimates:
         prefixes.append("link_normcdf_output")
     if "link_sigmoid_output_entropies_of_bma" in estimates:
@@ -468,6 +472,14 @@ def evaluate_on_abstained_prediction(
         prefixes.append("laplace_bridge")
     if "mean_field_entropies_of_bma" in estimates:
         prefixes.append("mean_field")
+    if "edl_dirichlet_entropies_of_bma" in estimates:
+        prefixes.append("edl_dirichlet")
+    if "link_normcdf_output_dirichlet_entropies_of_bma" in estimates:
+        prefixes.append("link_normcdf_output_dirichlet")
+    if "link_sigmoid_output_dirichlet_entropies_of_bma" in estimates:
+        prefixes.append("link_sigmoid_output_dirichlet")
+    if "link_sigmoid_product_output_dirichlet_entropies_of_bma" in estimates:
+        prefixes.append("link_sigmoid_product_output_dirichlet")
 
     for prefix in prefixes:
         gt_hard_bma_correctnesses_original = targets[
@@ -620,8 +632,6 @@ def evaluate_on_proper_scoring_and_calibration(
     if "mc_10_entropies_of_bma" in estimates:
         for i in [10, 100, 1000]:
             prefixes.append(f"mc_{i}")  # noqa: PERF401
-    if "dirichlet_entropies_of_bma" in estimates:
-        prefixes.append("dirichlet")
     if "link_normcdf_output_entropies_of_bma" in estimates:
         prefixes.append("link_normcdf_output")
     if "link_sigmoid_output_entropies_of_bma" in estimates:
@@ -630,6 +640,14 @@ def evaluate_on_proper_scoring_and_calibration(
         prefixes.append("laplace_bridge")
     if "mean_field_entropies_of_bma" in estimates:
         prefixes.append("mean_field")
+    if "edl_dirichlet_entropies_of_bma" in estimates:
+        prefixes.append("edl_dirichlet")
+    if "link_normcdf_output_dirichlet_entropies_of_bma" in estimates:
+        prefixes.append("link_normcdf_output_dirichlet")
+    if "link_sigmoid_output_dirichlet_entropies_of_bma" in estimates:
+        prefixes.append("link_sigmoid_output_dirichlet")
+    if "link_sigmoid_product_output_dirichlet_entropies_of_bma" in estimates:
+        prefixes.append("link_sigmoid_product_output_dirichlet")
 
     for prefix in prefixes:
         # Proper scoring and calibration for correctness of prediction
@@ -778,8 +796,6 @@ def evaluate_on_correlation_of_decomposition(
     if "mc_10_entropies_of_bma" in estimates:
         for i in [10, 100, 1000]:
             prefixes.append(f"mc_{i}")  # noqa: PERF401
-    if "dirichlet_entropies_of_bma" in estimates:
-        prefixes.append("dirichlet")
     if "link_normcdf_output_entropies_of_bma" in estimates:
         prefixes.append("link_normcdf_output")
     if "link_sigmoid_output_entropies_of_bma" in estimates:
@@ -788,6 +804,14 @@ def evaluate_on_correlation_of_decomposition(
         prefixes.append("laplace_bridge")
     if "mean_field_entropies_of_bma" in estimates:
         prefixes.append("mean_field")
+    if "edl_dirichlet_entropies_of_bma" in estimates:
+        prefixes.append("edl_dirichlet")
+    if "link_normcdf_output_dirichlet_entropies_of_bma" in estimates:
+        prefixes.append("link_normcdf_output_dirichlet")
+    if "link_sigmoid_output_dirichlet_entropies_of_bma" in estimates:
+        prefixes.append("link_sigmoid_output_dirichlet")
+    if "link_sigmoid_product_output_dirichlet_entropies_of_bma" in estimates:
+        prefixes.append("link_sigmoid_product_output_dirichlet")
 
     for prefix in prefixes:
         # Information-theoretical decomposition
@@ -1007,8 +1031,6 @@ def calc_correctnesses(estimates, log_probs, targets, is_soft):
     if "mc_10_entropies_of_bma" in estimates:
         for i in [10, 100, 1000]:
             prefixes.append(f"mc_{i}")  # noqa: PERF401
-    if "dirichlet_entropies_of_bma" in estimates:
-        prefixes.append("dirichlet")
     if "link_normcdf_output_entropies_of_bma" in estimates:
         prefixes.append("link_normcdf_output")
     if "link_sigmoid_output_entropies_of_bma" in estimates:
@@ -1017,6 +1039,14 @@ def calc_correctnesses(estimates, log_probs, targets, is_soft):
         prefixes.append("laplace_bridge")
     if "mean_field_entropies_of_bma" in estimates:
         prefixes.append("mean_field")
+    if "edl_dirichlet_entropies_of_bma" in estimates:
+        prefixes.append("edl_dirichlet")
+    if "link_normcdf_output_dirichlet_entropies_of_bma" in estimates:
+        prefixes.append("link_normcdf_output_dirichlet")
+    if "link_sigmoid_output_dirichlet_entropies_of_bma" in estimates:
+        prefixes.append("link_sigmoid_output_dirichlet")
+    if "link_sigmoid_product_output_dirichlet_entropies_of_bma" in estimates:
+        prefixes.append("link_sigmoid_product_output_dirichlet")
 
     for prefix in prefixes:
         predicted_labels_bma = log_probs[f"{prefix}_log_bmas"].argmax(dim=1)
