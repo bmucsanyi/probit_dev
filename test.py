@@ -31,7 +31,7 @@ from probit.utils import (
     spearmanr,
 )
 from probit.wrappers import (
-    CovariancePushforwardLaplaceWrapper,
+    CovariancePushforwardLaplaceWrapper2,
     DeepEnsembleWrapper,
     EDLWrapper,
     HETWrapper,
@@ -1145,7 +1145,8 @@ def get_bundle(
     link = args.predictive.split("_")[0]
     is_distributional_het = isinstance(model, HETWrapper) and not args.use_sampling
     is_distributional = is_distributional_het or isinstance(
-        model, SNGPWrapper | CovariancePushforwardLaplaceWrapper | LinearizedSWAGWrapper
+        model,
+        SNGPWrapper | CovariancePushforwardLaplaceWrapper2 | LinearizedSWAGWrapper,
     )
 
     if not isinstance(model, EDLWrapper | PostNetWrapper):
