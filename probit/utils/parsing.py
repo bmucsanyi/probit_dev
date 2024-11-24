@@ -592,13 +592,13 @@ group.add_argument(
     help="Sets a prior precision in Laplace",
 )
 group.add_argument(
-    "--log_prior_prec_min",
+    "--log-prior-prec-min",
     type=float,
     default=-1,
     help="Prior precision lower bound in Laplace grid search",
 )
 group.add_argument(
-    "--log_prior_prec_max",
+    "--log-prior-prec-max",
     type=float,
     default=2,
     help="Prior precision upper bound in Laplace grid search",
