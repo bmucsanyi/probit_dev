@@ -313,6 +313,8 @@ def gaussian_pushforward_mean(
     return_logits: bool = False,
 ) -> torch.Tensor:
     if link_function == "log":
+        if return_logits:
+            return means + vars / 2
         return torch.exp(means + vars / 2)
     elif link_function in ("probit", "logit"):
         scale = probit_scale(link_function)
@@ -511,18 +513,6 @@ def get_dirichlet(dirichlet_str, approximate):
     return dirichlet_fn
 
 
-def get_likelihood(predictive):
-    if predictive.startswith("softmax"):
-        return "softmax"
-    if predictive.startswith("probit"):
-        return "normcdf"
-    if predictive.startswith("logit"):
-        return "sigmoid"
-
-    msg = "Invalid predictive provided"
-    raise ValueError(msg)
-
-
 def normed_sigmoid(x, *, unnormalized=False):
     x = F.sigmoid(x)
 
@@ -551,6 +541,13 @@ def normed_ndtr_approx(x, *, unnormalized=False):
     return x
 
 
+def normed_exp(x, *, unnormalized=False):
+    if unnormalized:
+        return torch.exp(x)
+
+    return torch.softmax(x, dim=-1)
+
+
 def log_normed_ndtr_approx(x):
     x = log_ndtr_approx(x)  # [B, C]
 
@@ -574,6 +571,10 @@ def log_normed_ndtr(x):
     return x - torch.logsumexp(x, dim=-1, keepdim=True)
 
 
+def log_normed_exp(x):
+    return F.log_softmax(x, dim=-1)
+
+
 def get_activation(predictive, approximate, *, unnormalized=False):
     if predictive.startswith("softmax") and unnormalized:
         msg = "Invalid parameters provided"
@@ -581,6 +582,9 @@ def get_activation(predictive, approximate, *, unnormalized=False):
 
     if predictive.startswith("softmax"):
         return partial(F.softmax, dim=-1)
+
+    if predictive.startswith("log_"):
+        return partial(normed_exp, unnormalized=unnormalized)
 
     if predictive.startswith("probit"):
         fn = normed_ndtr_approx if approximate else normed_ndtr
@@ -596,7 +600,7 @@ def get_activation(predictive, approximate, *, unnormalized=False):
 
 
 def get_log_activation(predictive, approximate):
-    if predictive.startswith("softmax"):
+    if predictive.startswith("softmax") or predictive.startswith("log_"):
         return partial(F.log_softmax, dim=-1)
     if predictive.startswith("probit"):
         return log_normed_ndtr_approx if approximate else log_normed_ndtr
