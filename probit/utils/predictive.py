@@ -601,7 +601,7 @@ def get_activation(predictive, approximate, *, unnormalized=False):
 
 def get_log_activation(predictive, approximate):
     if predictive.startswith("softmax") or predictive.startswith("log_"):
-        return partial(F.log_softmax, dim=-1)
+        return normed_exp
     if predictive.startswith("probit"):
         return log_normed_ndtr_approx if approximate else log_normed_ndtr
     if predictive.startswith("logit"):
