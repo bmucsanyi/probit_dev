@@ -109,6 +109,23 @@ def probit_link_normcdf_output(
     )
 
 
+def log_link(
+    mean: torch.Tensor,
+    var: torch.Tensor,
+    *,
+    approximate: bool,
+    return_logits: bool = False,
+) -> torch.Tensor:
+    return probit_predictive(
+        mean,
+        var,
+        link_function="log",
+        output_function=None,
+        approximate=approximate,
+        return_logits=return_logits,
+    )
+
+
 def logit_link_sigmoid_output_dirichlet(
     mean: torch.Tensor, var: torch.Tensor
 ) -> torch.Tensor:
@@ -144,6 +161,19 @@ def probit_link_normcdf_output_dirichlet(
         link_function="probit",
         output_function="normcdf",
         approximate=approximate,
+    )
+
+
+def log_link_dirichlet(
+    mean: torch.Tensor,
+    var: torch.Tensor,
+) -> torch.Tensor:
+    return get_mom_dirichlet_approximation(
+        mean,
+        var,
+        link_function="log",
+        output_function="",
+        approximate=False,
     )
 
 
@@ -282,24 +312,30 @@ def gaussian_pushforward_mean(
     approximate: bool,
     return_logits: bool = False,
 ) -> torch.Tensor:
-    scale = probit_scale(link_function)
-    if "normcdf" in output_function:
-        logits = means / torch.sqrt(1 / scale + vars)
+    if link_function == "log":
+        return torch.exp(means + vars / 2)
+    elif link_function in ("probit", "logit"):
+        scale = probit_scale(link_function)
+        if "normcdf" in output_function:
+            logits = means / torch.sqrt(1 / scale + vars)
 
-        if return_logits:
-            return logits
+            if return_logits:
+                return logits
 
-        ndtr_fn = ndtr_approx if approximate else ndtr
-        predictives = ndtr_fn(logits.double()).float()
-    elif "sigmoid" in output_function:
-        logits = means / torch.sqrt(1 + scale * vars)
+            ndtr_fn = ndtr_approx if approximate else ndtr
+            predictives = ndtr_fn(logits.double()).float()
+        elif "sigmoid" in output_function:
+            logits = means / torch.sqrt(1 + scale * vars)
 
-        if return_logits:
-            return logits
+            if return_logits:
+                return logits
 
-        predictives = F.sigmoid(logits)
+            predictives = F.sigmoid(logits)
+        else:
+            msg = "Invalid output function"
+            raise NotImplementedError(msg)
     else:
-        msg = "Invalid output function"
+        msg = "Invalid link function"
         raise NotImplementedError(msg)
 
     return predictives
@@ -314,31 +350,37 @@ def gaussian_pushforward_second_moment(
     approximate: bool,
 ) -> torch.Tensor:
     scale = probit_scale(link_function)
-    if output_function == "sigmoid_product":
-        if link_function == "logit":
-            s = gaussian_pushforward_mean(
-                means, vars, "logit", "sigmoid", approximate=False
-            )
+    if link_function == "log":
+        return torch.exp(2 * means + 2 * vars)
+    elif link_function in ("probit", "logit"):
+        if output_function == "sigmoid_product":
+            if link_function == "logit":
+                s = gaussian_pushforward_mean(
+                    means, vars, "logit", "sigmoid", approximate=False
+                )
 
-            second_moment = s - s * (1 - s) / torch.sqrt(
-                1 + scale * vars
-            )  # = s * (1 - s) * (1 - 1 / torch.sqrt(1 + scale * vars)) + s**2
+                second_moment = s - s * (1 - s) / torch.sqrt(
+                    1 + scale * vars
+                )  # = s * (1 - s) * (1 - 1 / torch.sqrt(1 + scale * vars)) + s**2
+            else:
+                msg = "Invalid link function for sigmoid_product"
+                raise NotImplementedError(msg)
         else:
-            msg = "Invalid link function for sigmoid_product"
-            raise NotImplementedError(msg)
+            device = means.device
+
+            owens_t_input1 = (means / torch.sqrt(1 / scale + vars)).cpu().numpy()
+            owens_t_input2 = (1 / torch.sqrt(1 + 2 * scale * vars)).cpu().numpy()
+
+            t_term = -2 * torch.from_numpy(owens_t(owens_t_input1, owens_t_input2)).to(
+                device
+            )
+            p_term = gaussian_pushforward_mean(
+                means, vars, link_function, output_function, approximate=approximate
+            )
+            second_moment = p_term + t_term
     else:
-        device = means.device
-
-        owens_t_input1 = (means / torch.sqrt(1 / scale + vars)).cpu().numpy()
-        owens_t_input2 = (1 / torch.sqrt(1 + 2 * scale * vars)).cpu().numpy()
-
-        t_term = -2 * torch.from_numpy(owens_t(owens_t_input1, owens_t_input2)).to(
-            device
-        )
-        p_term = gaussian_pushforward_mean(
-            means, vars, link_function, output_function, approximate=approximate
-        )
-        second_moment = p_term + t_term
+        msg = "Invalid link function"
+        raise NotImplementedError
 
     return second_moment
 
@@ -434,6 +476,7 @@ PREDICTIVE_DICT = {
     "logit_link_mc": logit_link_mc,
     "probit_link_normcdf_output": probit_link_normcdf_output,
     "probit_link_mc": probit_link_mc,
+    "log_link": log_link,
 }
 
 
@@ -455,6 +498,7 @@ DIRICHLET_DICT = {
     "logit_link_sigmoid_output": logit_link_sigmoid_output_dirichlet,
     "logit_link_sigmoid_product_output": logit_link_sigmoid_product_output_dirichlet,
     "probit_link_normcdf_output": probit_link_normcdf_output_dirichlet,
+    "log_link": log_link_dirichlet,
 }
 
 

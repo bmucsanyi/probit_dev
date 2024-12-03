@@ -385,6 +385,8 @@ def evaluate_on_correctness_prediction(
         prefixes.append("link_normcdf_output")
     if "link_sigmoid_output_entropies_of_bma" in estimates:
         prefixes.append("link_sigmoid_output")
+    if "link_entropies_of_bma" in estimates:
+        prefixes.append("link")
     if "laplace_bridge_entropies_of_bma" in estimates:
         prefixes.append("laplace_bridge")
     if "mean_field_entropies_of_bma" in estimates:
@@ -397,6 +399,8 @@ def evaluate_on_correctness_prediction(
         prefixes.append("link_sigmoid_output_dirichlet")
     if "link_sigmoid_product_output_dirichlet_entropies_of_bma" in estimates:
         prefixes.append("link_sigmoid_product_output_dirichlet")
+    if "link_dirichlet_entropies_of_bma" in estimates:
+        prefixes.append("link_dirichlet")
 
     for prefix in prefixes:
         gt_hard_bma_correctnesses_original = targets[
@@ -469,6 +473,8 @@ def evaluate_on_abstained_prediction(
         prefixes.append("link_normcdf_output")
     if "link_sigmoid_output_entropies_of_bma" in estimates:
         prefixes.append("link_sigmoid_output")
+    if "link_entropies_of_bma" in estimates:
+        prefixes.append("link")
     if "laplace_bridge_entropies_of_bma" in estimates:
         prefixes.append("laplace_bridge")
     if "mean_field_entropies_of_bma" in estimates:
@@ -481,6 +487,8 @@ def evaluate_on_abstained_prediction(
         prefixes.append("link_sigmoid_output_dirichlet")
     if "link_sigmoid_product_output_dirichlet_entropies_of_bma" in estimates:
         prefixes.append("link_sigmoid_product_output_dirichlet")
+    if "link_dirichlet_entropies_of_bma" in estimates:
+        prefixes.append("link_dirichlet")
 
     for prefix in prefixes:
         gt_hard_bma_correctnesses_original = targets[
@@ -637,6 +645,8 @@ def evaluate_on_proper_scoring_and_calibration(
         prefixes.append("link_normcdf_output")
     if "link_sigmoid_output_entropies_of_bma" in estimates:
         prefixes.append("link_sigmoid_output")
+    if "link_entropies_of_bma" in estimates:
+        prefixes.append("link")
     if "laplace_bridge_entropies_of_bma" in estimates:
         prefixes.append("laplace_bridge")
     if "mean_field_entropies_of_bma" in estimates:
@@ -649,6 +659,8 @@ def evaluate_on_proper_scoring_and_calibration(
         prefixes.append("link_sigmoid_output_dirichlet")
     if "link_sigmoid_product_output_dirichlet_entropies_of_bma" in estimates:
         prefixes.append("link_sigmoid_product_output_dirichlet")
+    if "link_dirichlet_entropies_of_bma" in estimates:
+        prefixes.append("link_dirichlet")
 
     for prefix in prefixes:
         # Proper scoring and calibration for correctness of prediction
@@ -801,6 +813,8 @@ def evaluate_on_correlation_of_decomposition(
         prefixes.append("link_normcdf_output")
     if "link_sigmoid_output_entropies_of_bma" in estimates:
         prefixes.append("link_sigmoid_output")
+    if "link_entropies_of_bma" in estimates:
+        prefixes.append("link")
     if "laplace_bridge_entropies_of_bma" in estimates:
         prefixes.append("laplace_bridge")
     if "mean_field_entropies_of_bma" in estimates:
@@ -813,6 +827,8 @@ def evaluate_on_correlation_of_decomposition(
         prefixes.append("link_sigmoid_output_dirichlet")
     if "link_sigmoid_product_output_dirichlet_entropies_of_bma" in estimates:
         prefixes.append("link_sigmoid_product_output_dirichlet")
+    if "link_dirichlet_entropies_of_bma" in estimates:
+        prefixes.append("link_dirichlet")
 
     for prefix in prefixes:
         # Information-theoretical decomposition
@@ -1036,6 +1052,8 @@ def calc_correctnesses(estimates, log_probs, targets, is_soft):
         prefixes.append("link_normcdf_output")
     if "link_sigmoid_output_entropies_of_bma" in estimates:
         prefixes.append("link_sigmoid_output")
+    if "link_entropies_of_bma" in estimates:
+        prefixes.append("link")
     if "laplace_bridge_entropies_of_bma" in estimates:
         prefixes.append("laplace_bridge")
     if "mean_field_entropies_of_bma" in estimates:
@@ -1048,6 +1066,8 @@ def calc_correctnesses(estimates, log_probs, targets, is_soft):
         prefixes.append("link_sigmoid_output_dirichlet")
     if "link_sigmoid_product_output_dirichlet_entropies_of_bma" in estimates:
         prefixes.append("link_sigmoid_product_output_dirichlet")
+    if "link_dirichlet_entropies_of_bma" in estimates:
+        prefixes.append("link_dirichlet")
 
     for prefix in prefixes:
         predicted_labels_bma = log_probs[f"{prefix}_log_bmas"].argmax(dim=1)
@@ -1168,7 +1188,9 @@ def get_bundle(
         is_distributional and link != "softmax"
     ):
         if is_distributional:
-            if link == "probit":
+            if link == "log":
+                suffixes = ["link"]
+            elif link == "probit":
                 suffixes = ["link_normcdf_output", "link_mc"]
             elif link == "logit":
                 suffixes = [
@@ -1199,7 +1221,7 @@ def get_bundle(
 
     if is_distributional:
         if link == "softmax":
-            suffixes = ["laplace_bridge", "mean_field", "mc"]
+            suffixes = ["laplace_bridge", "mean_field", "mc", "link"]
         elif link == "probit":
             suffixes = ["link_normcdf_output", "link_mc"]
         elif link == "logit":
@@ -1354,7 +1376,7 @@ def convert_inference_res(inference_res, time_forward, args):
 
         link = args.predictive.split("_")[0]
         if link == "softmax":
-            suffixes = ["laplace_bridge", "mean_field", "mc"]
+            suffixes = ["laplace_bridge", "mean_field", "mc", "link"]
         elif link == "probit":
             suffixes = ["link_normcdf_output", "link_mc"]
         elif link == "logit":
