@@ -17,6 +17,7 @@ class HETHead(nn.Module):
         self,
         matrix_rank,
         num_mc_samples,
+        num_features,
         num_classes,
         temperature,
         classifier,
@@ -26,15 +27,16 @@ class HETHead(nn.Module):
         self._matrix_rank = matrix_rank
         self._num_mc_samples = num_mc_samples
         self._use_sampling = use_sampling
+        self._num_features = num_features
         self._num_classes = num_classes
 
         if self._matrix_rank > 0:
             self._low_rank_cov_layer = nn.Linear(
-                in_features=self._num_classes,
+                in_features=self._num_features,
                 out_features=self._num_classes * self._matrix_rank,
             )
         self._diagonal_var_layer = nn.Linear(
-            in_features=self._num_classes, out_features=self._num_classes
+            in_features=self._num_features, out_features=self._num_classes
         )
         self._min_scale_monte_carlo = 1e-3
 
@@ -42,20 +44,19 @@ class HETHead(nn.Module):
         self._classifier = classifier
 
     def forward(self, features):
-        logits = self._classifier(features)  # [B, C]
-
         # Shape variables
-        B, C = logits.shape
+        B = features.shape[0]
+        C = self._num_classes
         S = self._num_mc_samples
         R = self._matrix_rank
 
         if R > 0:
-            low_rank_cov = self._low_rank_cov_layer(logits).reshape(
+            low_rank_cov = self._low_rank_cov_layer(features).reshape(
                 -1, C, R
             )  # [B, C, R]
 
         diagonal_var = (
-            F.softplus(self._diagonal_var_layer(logits)) + self._min_scale_monte_carlo
+            F.softplus(self._diagonal_var_layer(features)) + self._min_scale_monte_carlo
         )  # [B, C]
 
         if self._use_sampling:
@@ -74,7 +75,7 @@ class HETHead(nn.Module):
             else:
                 samples = diagonal_samples
 
-            logits = logits.unsqueeze(1) + samples  # [B, S, C]
+            logits = self._classifier(features).unsqueeze(1) + samples  # [B, S, C]
 
             return (logits / self._temperature,)
 
@@ -83,7 +84,9 @@ class HETHead(nn.Module):
         else:
             vars = diagonal_var
 
-        return logits / self._temperature, vars / self._temperature**2
+        return self._classifier(
+            features
+        ) / self._temperature, vars / self._temperature**2
 
 
 class HETWrapper(DistributionalWrapper):
