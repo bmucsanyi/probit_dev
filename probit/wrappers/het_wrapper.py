@@ -110,6 +110,7 @@ class HETWrapper(DistributionalWrapper):
         self._classifier = HETHead(
             matrix_rank=self._matrix_rank,
             num_mc_samples=self._num_mc_samples,
+            num_features=self.num_features,
             num_classes=self.num_classes,
             temperature=self._temperature,
             classifier=self.model.get_classifier(),
@@ -144,6 +145,7 @@ class HETWrapper(DistributionalWrapper):
         self._classifier = HETHead(
             matrix_rank=self._matrix_rank,
             num_mc_samples=self._num_mc_samples,
+            num_features=self.num_features,
             num_classes=self.num_classes,
             temperature=self._temperature,
             classifier=self.model.get_classifier(),
