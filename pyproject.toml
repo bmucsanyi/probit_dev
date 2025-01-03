@@ -200,7 +200,7 @@ ignore = [
 "test_*.py" = ["S101"]  # Use of assert is allowed in test files
 
 [tool.ruff.lint.mccabe]
-max-complexity = 18
+max-complexity = 20
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"

@@ -316,7 +316,8 @@ def gaussian_pushforward_mean(
         if return_logits:
             return means + vars / 2
         return torch.exp(means + vars / 2)
-    elif link_function in ("probit", "logit"):
+
+    if link_function in {"probit", "logit"}:
         scale = probit_scale(link_function)
         if "normcdf" in output_function:
             logits = means / torch.sqrt(1 / scale + vars)
@@ -354,7 +355,8 @@ def gaussian_pushforward_second_moment(
     scale = probit_scale(link_function)
     if link_function == "log":
         return torch.exp(2 * means + 2 * vars)
-    elif link_function in ("probit", "logit"):
+
+    if link_function in {"probit", "logit"}:
         if output_function == "sigmoid_product":
             if link_function == "logit":
                 s = gaussian_pushforward_mean(
@@ -600,7 +602,7 @@ def get_activation(predictive, approximate, *, unnormalized=False):
 
 
 def get_log_activation(predictive, approximate):
-    if predictive.startswith("softmax") or predictive.startswith("log_"):
+    if predictive.startswith(("softmax", "log_")):
         return normed_exp
     if predictive.startswith("probit"):
         return log_normed_ndtr_approx if approximate else log_normed_ndtr

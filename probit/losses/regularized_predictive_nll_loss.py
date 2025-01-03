@@ -10,7 +10,7 @@ from probit.utils.predictive import get_predictive
 
 
 class RegularizedPredictiveNLLLoss(nn.Module):
-    """Regularized predictive NLL loss."""
+    """Numerically unstable regularized predictive NLL loss."""
 
     def __init__(
         self,
@@ -22,7 +22,7 @@ class RegularizedPredictiveNLLLoss(nn.Module):
     ):
         super().__init__()
 
-        if not predictive.startswith(("probit", "logit")):
+        if not predictive.startswith(("probit", "logit", "log")):
             msg = "Invalid predictive provided"
             raise ValueError(msg)
 
@@ -32,8 +32,10 @@ class RegularizedPredictiveNLLLoss(nn.Module):
 
         if predictive.startswith("probit"):
             self._activation = ndtr_approx if approximate else ndtr
-        else:
+        elif predictive.startswith("logit"):
             self._activation = F.sigmoid
+        else:  # predictive.startswith("exp")
+            self._activation = torch.exp
 
         self._regularization_factor = regularization_factor
 

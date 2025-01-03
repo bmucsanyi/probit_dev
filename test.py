@@ -1220,8 +1220,10 @@ def get_bundle(
             )
 
     if is_distributional:
-        if link == "softmax":
-            suffixes = ["laplace_bridge", "mean_field", "mc", "link"]
+        if link == "log":
+            suffixes = ["link"]
+        elif link == "softmax":
+            suffixes = ["laplace_bridge", "mean_field", "mc"]
         elif link == "probit":
             suffixes = ["link_normcdf_output", "link_mc"]
         elif link == "logit":
@@ -1375,8 +1377,10 @@ def convert_inference_res(inference_res, time_forward, args):
         mean, var = inference_res
 
         link = args.predictive.split("_")[0]
+        if link == "log":
+            suffixes = ["link"]
         if link == "softmax":
-            suffixes = ["laplace_bridge", "mean_field", "mc", "link"]
+            suffixes = ["laplace_bridge", "mean_field", "mc"]
         elif link == "probit":
             suffixes = ["link_normcdf_output", "link_mc"]
         elif link == "logit":
