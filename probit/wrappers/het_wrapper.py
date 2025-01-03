@@ -70,7 +70,7 @@ class HETHead(nn.Module):
                 )  # [B, S, R]
                 einsum_res = torch.einsum(
                     "bcr,bsr->bsc", low_rank_cov, standard_samples
-                )  # [B, S, D]
+                )  # [B, S, C]
                 samples = einsum_res + diagonal_samples  # [B, S, C]
             else:
                 samples = diagonal_samples
