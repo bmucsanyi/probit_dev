@@ -90,6 +90,18 @@ parser.add_argument(
     default=None,
     help="Exclude specific nodes",
 )
+parser.add_argument(
+    "--mail-type",
+    type=str,
+    default=None,
+    help="Event type(s) for email notification",
+)
+parser.add_argument(
+    "--mail-user",
+    type=str,
+    default=None,
+    help="Email address for email notification",
+)
 
 
 class SlurmJob:
@@ -126,8 +138,10 @@ class SlurmJob:
         log_path: Path,
         constraint: str | None,
         exclude: str | None,
-    ):
-        """SlurmJob constructor that stores (and check some of the) parameters.
+        mail_type: str | None,
+        mail_user: str | None,
+    ) -> None:
+        """SlurmJob constructor that stores (and checks some of the) parameters.
 
         Args:
             cmd_str: The command line string for executing the actual program code
@@ -156,6 +170,9 @@ class SlurmJob:
             constraint: With this parameter, you can target specific nodes that fulfill
                 a certain constraint.
             exclude: This parameter allows to exclude certain nodes.
+            mail_type: This parameter selects the type of event(s) for which an email
+                notification is sent. If set, `mail_user` must also be set.
+            mail_user: This parameter sets the email account for email notifications.
 
         Raises:
             ValueError: Either both mem_per_cpu and mem are specified or neither.
@@ -177,6 +194,10 @@ class SlurmJob:
         if mem is not None:
             self._check_memory_format(mem)
 
+        if mail_type is not None and mail_user is None:
+            msg = "`mail_user` must be specified when `mail_type` is set"
+            raise ValueError(msg)
+
         self._check_time_format(time)
 
         # Attribute assignments
@@ -193,6 +214,8 @@ class SlurmJob:
         self._log_path = log_path
         self._constraint = constraint
         self._exclude = exclude
+        self._mail_type = mail_type
+        self._mail_user = mail_user
 
         self._output_file_path = self._create_file_paths()
 
@@ -379,6 +402,8 @@ def main():
         log_path=args.log_path,
         constraint=args.constraint,
         exclude=args.exclude,
+        mail_type=args.mail_type,
+        mail_user=args.mail_user,
     )
     slurm_job.submit()
 
