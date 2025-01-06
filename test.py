@@ -1381,7 +1381,7 @@ def convert_inference_res(inference_res, time_forward, args):
     if len(inference_res) == 2:  # is_distributional
         mean, var = inference_res
 
-        converted_inference_res["vars"] = var
+        converted_inference_res["vars"] = var.flatten()
 
         link = args.predictive.split("_")[0]
         if link == "log":
