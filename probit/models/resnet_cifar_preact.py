@@ -15,7 +15,7 @@ def wide_resnet_c_preact_26_10(
     *,
     init_bias_minus_log_c=False,
 ):
-    """Constructs a WideResNet-28-10 model."""
+    """Constructs a WideResNet-26-10 model."""
     model = ResNetCPreAct(
         block_fn=BasicBlockCPreAct,
         depth=26,
