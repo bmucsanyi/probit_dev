@@ -1086,10 +1086,11 @@ def calc_correctnesses(estimates, log_probs, targets, is_soft):
 
 def extract_stats(stats):
     for key in list(stats.keys()):
-        stats[f"{key}_min"] = stats[key].min
-        stats[f"{key}_mean"] = stats[key].mean
-        stats[f"{key}_std"] = stats[key].std
-        stats[f"{key}_max"] = stats[key].max
+        elem = stats.pop(key)
+        stats[f"{key}_min"] = elem.min
+        stats[f"{key}_mean"] = elem.mean
+        stats[f"{key}_std"] = elem.std
+        stats[f"{key}_max"] = elem.max
 
 
 def remove_faulty_indices(estimates, log_probs, targets):

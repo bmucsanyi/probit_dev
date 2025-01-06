@@ -30,10 +30,12 @@ class StatMeter:
             n = val.shape[0]
 
             # Update mean
-            self.mean = (self.n * self.mean + val.sum()) / (self.n + n)
+            self.mean = (self.n * self.mean + val.sum().item()) / (self.n + n)
 
             # Update mean of squared values
-            self.mean_sq = (self.n * self.mean_sq + (val**2).sum()) / (self.n + n)
+            self.mean_sq = (self.n * self.mean_sq + (val**2).sum().item()) / (
+                self.n + n
+            )
 
             # Update variance and standard deviation
             # Variance = E[X²] - (E[X])²
@@ -43,8 +45,8 @@ class StatMeter:
             self.std = self.var**0.5  # No need for the conditional check
 
             # Update min and max
-            self.min = min(self.min, val.min())
-            self.max = max(self.max, val.max())
+            self.min = min(self.min, val.min().item())
+            self.max = max(self.max, val.max().item())
 
         # Update total count
         self.n += n
