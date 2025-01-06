@@ -10,7 +10,7 @@ import torch.nn.functional as F
 import torch.nn.parallel
 
 from probit.utils import (
-    AverageMeter,
+    StatMeter,
     area_under_lift_curve,
     area_under_risk_coverage_curve,
     auroc,
@@ -140,7 +140,7 @@ def evaluate(
 ):
     model.eval()
 
-    estimates, log_probs, targets, times = get_bundle(
+    estimates, log_probs, targets, stats = get_bundle(
         model=model,
         loader=loader,
         device=device,
@@ -150,7 +150,7 @@ def evaluate(
         args=args,
     )
 
-    metrics = times
+    metrics = stats
 
     metrics = evaluate_on_tasks(
         estimates=estimates,
@@ -870,7 +870,7 @@ def forward_general_model_on_loader(
     args,
     log_probs,
     estimates,
-    time_forward_m,
+    stats,
     gt_aleatorics_bregman,
     gt_soft_labels,
     gt_hard_labels,
@@ -889,8 +889,6 @@ def forward_general_model_on_loader(
             hard_label = label[:, -1]
             label = label[:, :-1]
 
-        batch_size = input.shape[0]
-
         time_forward_start = time.perf_counter()
         with amp_autocast():
             inference_res = model(input)
@@ -899,7 +897,9 @@ def forward_general_model_on_loader(
             torch.cuda.synchronize()
 
         time_forward_end = time.perf_counter()
-        time_forward = time_forward_end - time_forward_start
+        time_forward = torch.tensor(
+            [time_forward_end - time_forward_start], device=storage_device
+        )
 
         inference_res = tuple(
             res.detach().float().to(storage_device) for res in inference_res
@@ -914,10 +914,9 @@ def forward_general_model_on_loader(
         update_logit_based(
             inference_res=inference_res,
             indices=indices,
-            batch_size=batch_size,
             log_probs=log_probs,
             estimates=estimates,
-            time_forward_m=time_forward_m,
+            stats=stats,
         )
 
         # GT containers
@@ -951,7 +950,7 @@ def forward_deep_ensemble_on_loader(
     args,
     log_probs,
     estimates,
-    time_forward_m,
+    stats,
     gt_aleatorics_bregman,
     gt_soft_labels,
     gt_hard_labels,
@@ -1004,7 +1003,6 @@ def forward_deep_ensemble_on_loader(
         }
 
         inference_res = convert_inference_res(
-            model=model,
             inference_res=inference_res,
             time_forward=time_forwards_sum[i],
             args=args,
@@ -1013,10 +1011,9 @@ def forward_deep_ensemble_on_loader(
         update_logit_based(
             inference_res=inference_res,
             indices=indices,
-            batch_size=batch_size,
             log_probs=log_probs,
             estimates=estimates,
-            time_forward_m=time_forward_m,
+            stats=stats,
         )
 
         # GT containers
@@ -1087,9 +1084,12 @@ def calc_correctnesses(estimates, log_probs, targets, is_soft):
             )
 
 
-def extract_averages(times):
-    for key in list(times.keys()):
-        times[key] = times[key].avg
+def extract_stats(stats):
+    for key in list(stats.keys()):
+        stats[f"{key}_min"] = stats[key].min
+        stats[f"{key}_mean"] = stats[key].mean
+        stats[f"{key}_std"] = stats[key].std
+        stats[f"{key}_max"] = stats[key].max
 
 
 def remove_faulty_indices(estimates, log_probs, targets):
@@ -1118,7 +1118,7 @@ def get_bundle(
     estimates = {}
     log_probs = {}
     targets = {}
-    times = {}
+    stats = {}
 
     num_samples = len(loader.dataset)  # Total number of samples
 
@@ -1157,17 +1157,21 @@ def get_bundle(
         gt_aleatorics_bregman = torch.empty(num_samples, device=storage_device)
         targets["gt_aleatorics_bregman"] = gt_aleatorics_bregman
 
-    # Estimate containers
-    # Time
-    time_forward_m = AverageMeter()
-    times["time_forward_m"] = time_forward_m
-
     link = args.predictive.split("_")[0]
     is_distributional_het = isinstance(model, HETWrapper) and not args.use_sampling
     is_distributional = is_distributional_het or isinstance(
         model,
         SNGPWrapper | CovariancePushforwardLaplaceWrapper2 | LinearizedSWAGWrapper,
     )
+
+    # Estimate containers
+    # Stats
+    time_forward = StatMeter()
+    stats["time_forward"] = time_forward
+
+    if is_distributional:
+        vars_ = StatMeter()
+        stats["vars"] = vars_
 
     if not isinstance(model, EDLWrapper | PostNetWrapper):
         for i in [10, 100, 1000]:
@@ -1263,7 +1267,7 @@ def get_bundle(
             args=args,
             log_probs=log_probs,
             estimates=estimates,
-            time_forward_m=time_forward_m,
+            stats=stats,
             gt_aleatorics_bregman=gt_aleatorics_bregman,
             gt_soft_labels=gt_soft_labels,
             gt_hard_labels=gt_hard_labels,
@@ -1280,7 +1284,7 @@ def get_bundle(
             args=args,
             log_probs=log_probs,
             estimates=estimates,
-            time_forward_m=time_forward_m,
+            stats=stats,
             gt_aleatorics_bregman=gt_aleatorics_bregman,
             gt_soft_labels=gt_soft_labels,
             gt_hard_labels=gt_hard_labels,
@@ -1290,13 +1294,13 @@ def get_bundle(
     # Calculate correctness indicators
     calc_correctnesses(estimates, log_probs, targets, is_soft_dataset)
 
-    # Extract averages from the AverageMeters
-    extract_averages(times)
+    # Extract stats from the StatMeters
+    extract_stats(stats)
 
     if is_soft_dataset:
         remove_faulty_indices(estimates, log_probs, targets)
 
-    return estimates, log_probs, targets, times
+    return estimates, log_probs, targets, stats
 
 
 def handle_samples(logits, converted_inference_res, act_fn, num_samples):
@@ -1373,8 +1377,10 @@ def convert_inference_res(inference_res, time_forward, args):
 
     converted_inference_res["time_forward"] = time_forward
 
-    if len(inference_res) == 2:
+    if len(inference_res) == 2:  # is_distributional
         mean, var = inference_res
+
+        converted_inference_res["vars"] = var
 
         link = args.predictive.split("_")[0]
         if link == "log":
@@ -1453,14 +1459,13 @@ def convert_inference_res(inference_res, time_forward, args):
 def update_logit_based(
     inference_res,
     indices,
-    batch_size,
     log_probs,
     estimates,
-    time_forward_m,
+    stats,
 ):
     for key in inference_res:
-        if key == "time_forward":
-            time_forward_m.update(inference_res[key], batch_size)
+        if key in {"time_forward", "vars"}:
+            stats[key].update(inference_res[key])
         elif key.endswith("log_bmas"):
             log_probs[key][indices] = inference_res[key]
         else:

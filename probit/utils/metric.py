@@ -5,23 +5,50 @@ import torch.nn.functional as F
 from torch import Tensor
 
 
-class AverageMeter:
-    """Computes and stores the average and current value."""
+class StatMeter:
+    """Computes and stores the mean, min, and max of arrays."""
 
     def __init__(self):
         self.reset()
 
     def reset(self):
-        self.val = 0
-        self.avg = 0
-        self.sum = 0
-        self.count = 0
+        self.mean = 0
+        self.mean_sq = 0  # Mean of squared values
+        self.var = 0  # Variance
+        self.std = 0  # Standard deviation
+        self.n = 0  # Number of samples
+        self.min = float("inf")  # Initialize min to positive infinity
+        self.max = float("-inf")  # Initialize max to negative infinity
 
-    def update(self, val, n=1):
-        self.val = val
-        self.sum += val * n
-        self.count += n
-        self.avg = self.sum / self.count
+    def update(self, val):
+        n = val.shape[0]
+
+        # Update mean
+        self.mean = (self.n * self.mean + val.sum()) / (self.n + n)
+
+        # Update mean of squared values
+        self.mean_sq = (self.n * self.mean_sq + (val**2).sum()) / (self.n + n)
+
+        # Update variance and standard deviation
+        # Variance = E[X²] - (E[X])²
+        self.var = max(
+            0, self.mean_sq - self.mean**2
+        )  # Using max to ensure non-negative
+        self.std = self.var**0.5  # No need for the conditional check
+
+        # Update min and max
+        self.min = min(self.min, val.min())
+        self.max = max(self.max, val.max())
+
+        # Update total count
+        self.n += n
+
+    def __str__(self):
+        return (
+            f"StatMeter(n={self.n}, mean={self.mean:.4f}, "
+            f"std={self.std:.4f}, min={self.min:.4f}, "
+            f"max={self.max:.4f})"
+        )
 
 
 def is_correct_pred(output, target):

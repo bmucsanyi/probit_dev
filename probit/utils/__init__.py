@@ -8,7 +8,7 @@ from .loader import create_loader
 from .logging import log_wandb, setup_logging
 from .loss import create_loss_fn, get_laplace_loss_fn
 from .metric import (
-    AverageMeter,
+    StatMeter,
     accuracy,
     area_under_lift_curve,
     area_under_risk_coverage_curve,
@@ -68,11 +68,11 @@ from .transform import create_transform, hard_target_transform
 
 __all__ = [
     "PREDICTIVE_DICT",
-    "AverageMeter",
     "CheckpointSaver",
     "DefaultContext",
     "ModuleData",
     "NativeScaler",
+    "StatMeter",
     "accuracy",
     "area_under_lift_curve",
     "area_under_risk_coverage_curve",
