@@ -15,10 +15,10 @@ from timm.scheduler import create_scheduler_v2
 from torch.nn.parallel import DistributedDataParallel
 
 from probit.utils import (
-    AverageMeter,
     CheckpointSaver,
     DefaultContext,
     NativeScaler,
+    StatMeter,
     accuracy,
     create_dataset,
     create_loader,
@@ -832,8 +832,8 @@ def train_one_epoch(
     amp_autocast,
     loss_scaler,
 ):
-    update_time_m = AverageMeter()
-    losses_m = AverageMeter()
+    update_time_m = StatMeter(update_mean_with_mean=True)
+    losses_m = StatMeter(update_mean_with_mean=True)
 
     model.train()
 
@@ -925,15 +925,15 @@ def train_one_epoch(
                 logger.info(
                     f"Train: {epoch} [{update_idx:>4d}/{updates_per_epoch} "
                     f"({100 * update_idx / (updates_per_epoch - 1):>3.0f}%)]  "
-                    f"Loss: {losses_m.avg:#.3g}  "
-                    f"Time: {update_time_m.avg:.3f}s  "
+                    f"Loss: {losses_m.mean:#.3g}  "
+                    f"Time: {update_time_m.mean:.3f}s  "
                     f"LR: {lr:.3e}  "
                 )
 
         if lr_scheduler is not None:
-            lr_scheduler.step_update(num_updates=num_updates, metric=losses_m.avg)
+            lr_scheduler.step_update(num_updates=num_updates, metric=losses_m.mean)
 
-    return {"train_loss": losses_m.avg}
+    return {"train_loss": losses_m.mean}
 
 
 @torch.no_grad()
@@ -944,10 +944,10 @@ def validate(
     device,
     amp_autocast,
 ):
-    batch_time_m = AverageMeter()
-    losses_m = AverageMeter()
-    top_1_m = AverageMeter()
-    normalization_factor_m = AverageMeter()
+    batch_time_m = StatMeter(update_mean_with_mean=True)
+    losses_m = StatMeter(update_mean_with_mean=True)
+    top_1_m = StatMeter(update_mean_with_mean=True)
+    normalization_factor_m = StatMeter(update_mean_with_mean=True)
 
     model.eval()
 
@@ -1038,10 +1038,11 @@ def validate(
         batch_time_m.update(time.time() - end)
         end = time.time()
 
-    metrics = {"val_loss": losses_m.avg, "val_top_1_accuracy": top_1_m.avg}
-
-    if normalization_factor_m.count > 0:
-        metrics["val_norm_factor"] = normalization_factor_m.avg
+    metrics = {
+        "val_loss": losses_m.mean,
+        "val_top_1_accuracy": top_1_m.mean,
+        "val_norm_factor": normalization_factor_m.mean,
+    }
 
     return metrics
 

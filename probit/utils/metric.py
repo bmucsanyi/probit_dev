@@ -8,47 +8,46 @@ from torch import Tensor
 class StatMeter:
     """Computes and stores the mean, min, and max of arrays."""
 
-    def __init__(self):
+    def __init__(self, *, update_mean_with_mean=False):
+        self.update_mean_with_mean = update_mean_with_mean
         self.reset()
 
     def reset(self):
         self.mean = 0
-        self.mean_sq = 0  # Mean of squared values
-        self.var = 0  # Variance
-        self.std = 0  # Standard deviation
         self.n = 0  # Number of samples
-        self.min = float("inf")  # Initialize min to positive infinity
-        self.max = float("-inf")  # Initialize max to negative infinity
 
-    def update(self, val):
-        n = val.shape[0]
+        if not self.update_mean_with_mean:
+            self.mean_sq = 0  # Mean of squared values
+            self.var = 0  # Variance
+            self.std = 0  # Standard deviation
+            self.min = float("inf")  # Initialize min to positive infinity
+            self.max = float("-inf")  # Initialize max to negative infinity
 
-        # Update mean
-        self.mean = (self.n * self.mean + val.sum()) / (self.n + n)
+    def update(self, val, n=1):
+        if self.update_mean_with_mean:
+            self.mean = (self.n * self.mean + val * n) / (self.n + n)
+        else:
+            n = val.shape[0]
 
-        # Update mean of squared values
-        self.mean_sq = (self.n * self.mean_sq + (val**2).sum()) / (self.n + n)
+            # Update mean
+            self.mean = (self.n * self.mean + val.sum()) / (self.n + n)
 
-        # Update variance and standard deviation
-        # Variance = E[X²] - (E[X])²
-        self.var = max(
-            0, self.mean_sq - self.mean**2
-        )  # Using max to ensure non-negative
-        self.std = self.var**0.5  # No need for the conditional check
+            # Update mean of squared values
+            self.mean_sq = (self.n * self.mean_sq + (val**2).sum()) / (self.n + n)
 
-        # Update min and max
-        self.min = min(self.min, val.min())
-        self.max = max(self.max, val.max())
+            # Update variance and standard deviation
+            # Variance = E[X²] - (E[X])²
+            self.var = max(
+                0, self.mean_sq - self.mean**2
+            )  # Using max to ensure non-negative
+            self.std = self.var**0.5  # No need for the conditional check
+
+            # Update min and max
+            self.min = min(self.min, val.min())
+            self.max = max(self.max, val.max())
 
         # Update total count
         self.n += n
-
-    def __str__(self):
-        return (
-            f"StatMeter(n={self.n}, mean={self.mean:.4f}, "
-            f"std={self.std:.4f}, min={self.min:.4f}, "
-            f"max={self.max:.4f})"
-        )
 
 
 def is_correct_pred(output, target):
