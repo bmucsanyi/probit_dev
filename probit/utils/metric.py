@@ -6,7 +6,7 @@ from torch import Tensor
 
 
 class StatMeter:
-    """Computes and stores the mean, min, and max of arrays."""
+    """Computes and stores running statistics."""
 
     def __init__(self, *, update_mean_with_mean=False):
         self.update_mean_with_mean = update_mean_with_mean
@@ -14,14 +14,14 @@ class StatMeter:
 
     def reset(self):
         self.mean = 0
-        self.n = 0  # Number of samples
+        self.n = 0
 
         if not self.update_mean_with_mean:
-            self.mean_sq = 0  # Mean of squared values
-            self.var = 0  # Variance
-            self.std = 0  # Standard deviation
-            self.min = float("inf")  # Initialize min to positive infinity
-            self.max = float("-inf")  # Initialize max to negative infinity
+            self.mean_sq = 0
+            self.var = 0
+            self.std = 0
+            self.min = float("inf")
+            self.max = float("-inf")
 
     def update(self, val, n=1):
         if self.update_mean_with_mean:
@@ -29,26 +29,22 @@ class StatMeter:
         else:
             n = val.shape[0]
 
-            # Update mean
-            self.mean = (self.n * self.mean + val.sum().item()) / (self.n + n)
+            # Mean delta update
+            delta = val.sum().item() / n - self.mean
+            self.mean = self.mean + delta * (n / (self.n + n))
 
-            # Update mean of squared values
-            self.mean_sq = (self.n * self.mean_sq + (val**2).sum().item()) / (
-                self.n + n
-            )
+            # Mean squared delta update
+            delta_sq = (val**2).sum().item() / n - self.mean_sq
+            self.mean_sq = self.mean_sq + delta_sq * (n / (self.n + n))
 
-            # Update variance and standard deviation
-            # Variance = E[X²] - (E[X])²
-            self.var = max(
-                0, self.mean_sq - self.mean**2
-            )  # Using max to ensure non-negative
-            self.std = self.var**0.5  # No need for the conditional check
+            # Var and std
+            self.var = max(0, self.mean_sq - self.mean**2)
+            self.std = self.var**0.5
 
-            # Update min and max
+            # Min/max
             self.min = min(self.min, val.min().item())
             self.max = max(self.max, val.max().item())
 
-        # Update total count
         self.n += n
 
 
