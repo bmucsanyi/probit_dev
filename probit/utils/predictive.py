@@ -429,7 +429,9 @@ def get_mom_dirichlet_approximation(
     S = torch.maximum(S1, torch.ones(S1.shape, device=S1.device))
     P_EPS = 1e-10
     LP = torch.mean(
-        torch.log(torch.clamp((M1 * S - M2) / (M2 - M1**2), min=P_EPS)),
+        torch.log(
+            torch.clamp((M1 * S - M2) / torch.clamp(M2 - M1**2, min=P_EPS), min=P_EPS)
+        ),
         dim=-1,
         keepdim=True,
     )
