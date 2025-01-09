@@ -113,7 +113,6 @@ def log_link(
     mean: torch.Tensor,
     var: torch.Tensor,
     *,
-    approximate: bool,
     return_logits: bool = False,
 ) -> torch.Tensor:
     return probit_predictive(
@@ -121,7 +120,7 @@ def log_link(
         var,
         link_function="log",
         output_function=None,
-        approximate=approximate,
+        approximate=False,
         return_logits=return_logits,
     )
 
