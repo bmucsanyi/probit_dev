@@ -351,9 +351,10 @@ def gaussian_pushforward_second_moment(
     *,
     approximate: bool,
 ) -> torch.Tensor:
-    scale = probit_scale(link_function)
     if link_function == "log":
         return torch.exp(2 * means + 2 * vars)
+
+    scale = probit_scale(link_function)
 
     if link_function in {"probit", "logit"}:
         if output_function == "sigmoid_product":
