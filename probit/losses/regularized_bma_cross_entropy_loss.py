@@ -16,7 +16,7 @@ class RegularizedBMACrossEntropyLoss(nn.Module):
         self._regularization_factor = regularization_factor
 
         self.predictive = get_predictive(
-            predictive="sigmoid_mean_field",
+            predictive="softmax_mean_field",
             use_correction=False,
             num_mc_samples=0,
             approximate=False,
