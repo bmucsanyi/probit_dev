@@ -11,7 +11,7 @@ class ExpNLLLoss(nn.Module):
     def __init__(self):
         super().__init__()
 
-        self._max = torch.tensor(1.0, dtype=torch.double) - 1e-15
+        self.register_buffer("max", torch.tensor(1.0, dtype=torch.double) - 1e-15)
 
     def forward(self, logits, targets):
         targets = F.one_hot(targets, num_classes=logits.shape[-1])
@@ -23,7 +23,7 @@ class ExpNLLLoss(nn.Module):
         loss = -torch.where(
             targets == 1,
             act.log(),
-            torch.log1p(-act.double().clamp(max=self._max)).float(),
+            torch.log1p(-act.double().clamp(max=self.max)).float(),
         )
 
         # Sum along the class dimension
