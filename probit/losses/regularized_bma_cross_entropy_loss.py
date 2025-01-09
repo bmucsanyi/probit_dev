@@ -6,6 +6,8 @@ from torch import nn
 
 from probit.utils.predictive import get_predictive
 
+# TODO(bmucsanyi): Implement MC version of log_link if needed
+
 
 class RegularizedBMACrossEntropyLoss(nn.Module):
     """Implements a regularized Cross-entropy loss with Bayesian Model Averaging."""
@@ -15,7 +17,7 @@ class RegularizedBMACrossEntropyLoss(nn.Module):
     ):
         super().__init__()
 
-        if not predictive.startswith("softmax"):
+        if not predictive.startswith("log_link"):
             msg = "Invalid predictive provided"
             raise ValueError(msg)
 
@@ -35,32 +37,30 @@ class RegularizedBMACrossEntropyLoss(nn.Module):
         self.num_mc_samples = num_mc_samples
 
     def forward(self, logits, targets):
-        if len(logits) == 2:
-            mean, var = logits
+        mean, var = logits
 
-            regularizer = mean.exp().sum(dim=-1).sub(1).square().mean()
+        regularizer = mean.exp().sum(dim=-1).sub(1).square().mean()
 
-            if self.predictive_str.endswith("mc"):
-                logits = (
-                    var.sqrt()
-                    * torch.randn(
-                        var.shape[0],
-                        self.num_mc_samples,
-                        var.shape[1],
-                        device=var.device,
-                    )
-                    + mean
+        if self.predictive_str.endswith("mc"):
+            logits = (
+                var.sqrt()
+                * torch.randn(
+                    var.shape[0],
+                    self.num_mc_samples,
+                    var.shape[1],
+                    device=var.device,
                 )
-            else:
-                logits = self.predictive(mean, var, return_logits=True)
-                return (
-                    self.loss(logits, targets)
-                    + self._regularization_factor * regularizer
-                )
-        else:
-            regularizer = logits[0].mean(dim=1).exp().sum(dim=-1).sub(1).square().mean()
+                + mean
+            )
+            logits = logits[0]
+            log_probs = (
+                F.softmax(logits, dim=-1).mean(dim=1).add(self.eps).log()
+            )  # [B, C]
 
-        logits = logits[0]
-        log_probs = F.softmax(logits, dim=-1).mean(dim=1).add(self.eps).log()  # [B, C]
+            return (
+                self.loss(log_probs, targets)
+                + self._regularization_factor * regularizer
+            )
 
-        return self.loss(log_probs, targets) + self._regularization_factor * regularizer
+        logits = self.predictive(mean, var, return_logits=True)
+        return self.loss(logits, targets) + self._regularization_factor * regularizer
