@@ -1,5 +1,6 @@
 from .bma_cross_entropy_loss import BMACrossEntropyLoss
 from .edl_loss import EDLLoss
+from .exp_nll_loss import ExpNLLLoss
 from .normcdf_nll_loss import NormCDFNLLLoss
 from .regularized_predictive_nll_loss import RegularizedPredictiveNLLLoss
 from .regularized_uce_loss import RegularizedUCELoss
@@ -10,6 +11,7 @@ from .unnormalized_predictive_nll_loss import UnnormalizedPredictiveNLLLoss
 __all__ = [
     "BMACrossEntropyLoss",
     "EDLLoss",
+    "ExpNLLLoss",
     "NormCDFNLLLoss",
     "RegularizedPredictiveNLLLoss",
     "RegularizedUCELoss",

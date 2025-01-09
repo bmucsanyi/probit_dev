@@ -5,6 +5,7 @@ from torch import nn
 from probit.losses import (
     BMACrossEntropyLoss,
     EDLLoss,
+    ExpNLLLoss,
     NormCDFNLLLoss,
     RegularizedPredictiveNLLLoss,
     RegularizedUCELoss,
@@ -17,7 +18,7 @@ from probit.losses.normed_sigmoid_loss import NormedSigmoidNLLLoss
 
 
 def get_laplace_loss_fn(predictive):
-    if predictive.startswith("softmax"):
+    if predictive.startswith(("softmax", "log_link")):
         return nn.CrossEntropyLoss()
     if predictive.startswith("probit"):
         return NormedNdtrNLLLoss()
@@ -53,6 +54,8 @@ def create_loss_fn(args, num_batches):
         train_loss_fn = NormCDFNLLLoss(args.approximate)
     elif args.loss == "sigmoid-nll":
         train_loss_fn = SigmoidNLLLoss()
+    elif args.loss == "exp-nll":
+        train_loss_fn = ExpNLLLoss()
     elif args.loss == "regularized-predictive-nll":
         train_loss_fn = RegularizedPredictiveNLLLoss(
             predictive=args.predictive,
