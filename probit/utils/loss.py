@@ -43,9 +43,6 @@ def create_loss_fn(args, num_batches):
         )
     elif args.loss == "regularized-bma-cross-entropy":
         train_loss_fn = RegularizedBMACrossEntropyLoss(
-            predictive=args.predictive,
-            use_correction=args.use_correction,
-            num_mc_samples=args.num_mc_samples,
             regularization_factor=args.regularization_factor,
         )
     elif args.loss == "edl":
