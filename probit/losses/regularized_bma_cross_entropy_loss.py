@@ -7,15 +7,19 @@ from torch import nn
 from probit.utils.predictive import get_predictive
 
 
-class BMACrossEntropyLoss(nn.Module):
-    """Implements Cross-entropy loss combined with Bayesian Model Averaging."""
+class RegularizedBMACrossEntropyLoss(nn.Module):
+    """Implements a regularized Cross-entropy loss with Bayesian Model Averaging."""
 
-    def __init__(self, predictive, use_correction, num_mc_samples):
+    def __init__(
+        self, predictive, use_correction, num_mc_samples, regularization_factor
+    ):
         super().__init__()
 
         if not predictive.startswith("softmax"):
             msg = "Invalid predictive provided"
             raise ValueError(msg)
+
+        self._regularization_factor = regularization_factor
 
         self.predictive_str = predictive
 
@@ -34,6 +38,8 @@ class BMACrossEntropyLoss(nn.Module):
         if len(logits) == 2:
             mean, var = logits
 
+            regularizer = mean.exp().sum(dim=-1).sub(1).square().mean()
+
             if self.predictive_str.endswith("mc"):
                 logits = (
                     var.sqrt()
@@ -47,8 +53,14 @@ class BMACrossEntropyLoss(nn.Module):
                 )
             else:
                 logits = self.predictive(mean, var, return_logits=True)
-                return self.loss(logits, targets)
+                return (
+                    self.loss(logits, targets)
+                    + self._regularization_factor * regularizer
+                )
+        else:
+            regularizer = logits[0].mean(dim=1).exp().sum(dim=-1).sub(1).square().mean()
 
         logits = logits[0]
         log_probs = F.softmax(logits, dim=-1).mean(dim=1).add(self.eps).log()  # [B, C]
-        return self.loss(log_probs, targets)
+
+        return self.loss(log_probs, targets) + self._regularization_factor * regularizer
