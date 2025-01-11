@@ -336,10 +336,11 @@ class LaplaceRandomFeatureCovariance(nn.Module):
 
         # Compute covariance matrix update only when `update_covariance = True`.
         if self.update_covariance:
-            covariance_matrix_updated = torch.linalg.inv(
-                self._ridge_penalty
-                * torch.eye(self._gp_feature_dim, device=precision_matrix.device)
-                + precision_matrix
+            eigvals, eigvecs = torch.linalg.eigh(precision_matrix)
+            eigvals = torch.clamp(eigvals, min=0.0)
+            covariance_eigvals = torch.reciprocal(eigvals + self._ridge_penalty)
+            covariance_matrix_updated = (
+                eigvecs @ torch.diag(covariance_eigvals) @ eigvecs.T
             )
         else:
             covariance_matrix_updated = covariance_matrix
