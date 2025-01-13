@@ -9,6 +9,7 @@ from probit.losses import (
     NormCDFNLLLoss,
     RegularizedBMACrossEntropyLoss,
     RegularizedPredictiveNLLLoss,
+    RegularizedSigmoidNLLLoss,
     RegularizedSoftmaxNLLLoss,
     RegularizedUCELoss,
     SigmoidNLLLoss,
@@ -64,6 +65,10 @@ def create_loss_fn(args, num_batches):
         train_loss_fn = ExpNLLLoss()
     elif args.loss == "regularized-softmax-nll":
         train_loss_fn = RegularizedSoftmaxNLLLoss(
+            regularization_factor=args.regularization_factor
+        )
+    elif args.loss == "regularized-sigmoid-nll":
+        train_loss_fn = RegularizedSigmoidNLLLoss(
             regularization_factor=args.regularization_factor
         )
     elif args.loss == "regularized-predictive-nll":
