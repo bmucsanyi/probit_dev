@@ -45,6 +45,7 @@ def create_loss_fn(args, num_batches):
     elif args.loss == "regularized-bma-cross-entropy":
         train_loss_fn = RegularizedBMACrossEntropyLoss(
             regularization_factor=args.regularization_factor,
+            target_normalization_value=args.target_normalization_value,
         )
     elif args.loss == "edl":
         train_loss_fn = EDLLoss(
@@ -65,11 +66,13 @@ def create_loss_fn(args, num_batches):
         train_loss_fn = ExpNLLLoss()
     elif args.loss == "regularized-softmax-nll":
         train_loss_fn = RegularizedSoftmaxNLLLoss(
-            regularization_factor=args.regularization_factor
+            regularization_factor=args.regularization_factor,
+            target_normalization_value=args.target_normalization_value,
         )
     elif args.loss == "regularized-sigmoid-nll":
         train_loss_fn = RegularizedSigmoidNLLLoss(
-            regularization_factor=args.regularization_factor
+            regularization_factor=args.regularization_factor,
+            target_normalization_value=args.target_normalization_value,
         )
     elif args.loss == "regularized-predictive-nll":
         train_loss_fn = RegularizedPredictiveNLLLoss(
@@ -78,6 +81,7 @@ def create_loss_fn(args, num_batches):
             num_mc_samples=args.num_mc_samples,
             regularization_factor=args.regularization_factor,
             approximate=args.approximate,
+            target_normalization_value=args.target_normalization_value,
         )
     elif args.loss == "unnormalized-predictive-nll":
         train_loss_fn = UnnormalizedPredictiveNLLLoss(

@@ -547,6 +547,12 @@ group.add_argument(
     help="Regularization factor in the loss",
 )
 group.add_argument(
+    "--target-normalization-value",
+    type=float,
+    default=1.0,
+    help="Target normalization value in regularized losses",
+)
+group.add_argument(
     "--edl-start-epoch",
     type=int,
     default=1,
