@@ -6,7 +6,7 @@ from torch import nn
 
 
 class RegularizedSigmoidNLLLoss(nn.Module):
-    """Regularized sigmoid + NLL loss encouraging sum(sigmoid(logits)) approx. 1."""
+    """Regularized sigmoid + NLL loss encouraging sum(sigmoid(logits)) approx. c."""
 
     def __init__(self, regularization_factor, target_normalization_value):
         super().__init__()
