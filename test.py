@@ -1107,7 +1107,7 @@ def remove_faulty_indices(estimates, log_probs, targets):
             targets[target_name] = targets[target_name][~faulty_indices]
 
 
-def get_bundle(
+def get_bundle(  # noqa: C901
     model,
     loader,
     device,
@@ -1173,6 +1173,10 @@ def get_bundle(
     if is_distributional:
         vars_ = StatMeter()
         stats["vars"] = vars_
+
+        if args.predictive != "softmax":
+            norm_factors = StatMeter()
+            stats["norm_factors"] = norm_factors
 
     if not isinstance(model, EDLWrapper | PostNetWrapper):
         for i in [10, 100, 1000]:
@@ -1386,6 +1390,12 @@ def convert_inference_res(inference_res, time_forward, args):
 
         converted_inference_res["vars"] = var.flatten()
 
+        if "softmax" not in args.predictive:
+            act_fn = get_activation(
+                args.predictive, args.approximate, unnormalized=True
+            )
+            converted_inference_res["norm_factors"] = act_fn(mean).sum(dim=-1)
+
         link = args.predictive.split("_")[0]
         if link == "log":
             suffixes = ["link", "link_mc"]
@@ -1468,7 +1478,7 @@ def update_logit_based(
     stats,
 ):
     for key in inference_res:
-        if key in {"time_forward", "vars"}:
+        if key in {"time_forward", "vars", "norm_factors"}:
             stats[key].update(inference_res[key])
         elif key.endswith("log_bmas"):
             log_probs[key][indices] = inference_res[key]
