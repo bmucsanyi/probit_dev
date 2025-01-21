@@ -947,7 +947,7 @@ def validate(
     batch_time_m = StatMeter(update_mean_with_mean=True)
     losses_m = StatMeter(update_mean_with_mean=True)
     top_1_m = StatMeter(update_mean_with_mean=True)
-    normalization_factor_m = StatMeter(update_mean_with_mean=True)
+    normalization_factor_m = StatMeter()
 
     model.eval()
 
@@ -979,8 +979,7 @@ def validate(
                         args.predictive, args.approximate, unnormalized=True
                     )
                     normalization_factor_m.update(
-                        unnormalized_act_fn(logit).sum(dim=-1).mean().item(),
-                        input.shape[0],
+                        unnormalized_act_fn(logit).sum(dim=-1),
                     )
 
                 log_prob = log_act_fn(logit)
@@ -998,8 +997,7 @@ def validate(
                         args.predictive, args.approximate, unnormalized=True
                     )
                     normalization_factor_m.update(
-                        unnormalized_act_fn(output).sum(dim=-1).mean().item(),
-                        input.shape[0],
+                        unnormalized_act_fn(output).sum(dim=-1),
                     )
 
                 log_prob = log_act_fn(output)
@@ -1041,7 +1039,10 @@ def validate(
     metrics = {
         "val_loss": losses_m.mean,
         "val_top_1_accuracy": top_1_m.mean,
-        "val_norm_factor": normalization_factor_m.mean,
+        "val_norm_factor_mean": normalization_factor_m.mean,
+        "val_norm_factor_min": normalization_factor_m.min,
+        "val_norm_factor_max": normalization_factor_m.max,
+        "val_norm_factor_std": normalization_factor_m.std,
     }
 
     return metrics
