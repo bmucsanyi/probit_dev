@@ -12,3 +12,4 @@
 .venv
 CIFAR10H
 cifar-10-batches-py
+plots
