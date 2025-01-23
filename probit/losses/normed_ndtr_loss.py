@@ -7,7 +7,7 @@ from backpack.extensions.secondorder.hbp.losses import HBPLoss
 from torch import Tensor
 from torch.distributions import Categorical
 
-from probit.utils.predictive import log_normed_ndtr, ndtr
+from probit.utils.predictive import log_ndtr, log_normed_ndtr
 
 
 class HBPNormedNdtrNLLLoss(HBPLoss):
@@ -69,10 +69,12 @@ class NormedNdtrNLLLossDerivatives(NLLLossDerivatives):
         Returns:
             Categorical distribution with probabilities from the subsampled_input.
         """
-        elementwise_probs = ndtr(subsampled_input)
-        probs = elementwise_probs / elementwise_probs.sum(dim=1, keepdim=True)
+        elementwise_log_probs = log_ndtr(subsampled_input)
+        log_probs = elementwise_log_probs - torch.logsumexp(
+            elementwise_log_probs, dim=1, keepdim=True
+        )
 
-        return Categorical(probs=probs)
+        return Categorical(probs=log_probs.exp())
 
     @staticmethod
     def _get_mean_normalization(input: Tensor) -> int:
@@ -96,26 +98,31 @@ class NormedNdtrNLLLossDerivatives(NLLLossDerivatives):
     ) -> torch.Tensor:
         # probs
         subsampled_input = subsampled_input.double()
-        probs = ndtr(subsampled_input)  # [N C D1 D2]
+        log_probs = log_ndtr(subsampled_input)  # [N C D1 D2]
 
         # norm probs
-        norm_factors = probs.sum(dim=1, keepdim=True)  # [N 1 D1 D2]
+        log_norm_factors = torch.logsumexp(
+            log_probs, dim=1, keepdim=True
+        )  # [N 1 D1 D2]
 
         # normal pdf
         normal = torch.distributions.Normal(0, 1)
-        pdf_vals = normal.log_prob(subsampled_input).exp()  # [N C D1 D2]
+        log_pdf_vals = normal.log_prob(subsampled_input)  # [N C D1 D2]
+
+        first_term = (log_pdf_vals - log_norm_factors).exp()  # [N C D1 D2]
 
         # labels
         distribution = self._make_distribution(subsampled_input)
         samples = distribution.sample(torch.Size([mc_samples]))  # [V N D1 D2]
-        samples_onehot = F.one_hot(samples, num_classes=probs.shape[1])  # [V N D1 D2 C]
+        samples_onehot = F.one_hot(
+            samples, num_classes=log_probs.shape[1]
+        )  # [V N D1 D2 C]
         samples_onehot_rearranged = torch.einsum("vn...c->vnc...", samples_onehot).to(
-            probs.dtype
+            log_probs.dtype
         )  # [V N C D1 D2]
 
-        ret_val = (
-            pdf_vals / norm_factors
-            - torch.nan_to_num(pdf_vals / probs) * samples_onehot_rearranged
-        )
+        second_term = (
+            log_pdf_vals - log_probs
+        ).exp() * samples_onehot_rearranged  # [V N C D1 D2]
 
-        return ret_val.float()
+        return (first_term - second_term).float()
