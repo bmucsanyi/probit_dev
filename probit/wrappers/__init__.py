@@ -13,14 +13,13 @@ __all__ = [
     "SamplePushforwardLaplaceWrapper",
 ]
 
-from covariance_pushforward_lllaplace_wrapper import (
-    CovariancePushforwardLLLaplaceWrapper,
-)
-
 from .baseline_wrapper import BaselineWrapper
 from .covariance_pushforward_laplace_wrapper import CovariancePushforwardLaplaceWrapper
 from .covariance_pushforward_laplace_wrapper2 import (
     CovariancePushforwardLaplaceWrapper2,
+)
+from .covariance_pushforward_lllaplace_wrapper import (
+    CovariancePushforwardLLLaplaceWrapper,
 )
 from .deep_ensemble_wrapper import DeepEnsembleWrapper
 from .edl_wrapper import EDLWrapper
