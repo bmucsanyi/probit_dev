@@ -95,20 +95,15 @@ class NormedNdtrNLLLossDerivatives(NLLLossDerivatives):
         self, subsampled_input: torch.Tensor, mc_samples: int
     ) -> torch.Tensor:
         # probs
-        probs = ndtr(subsampled_input)
-        expand_dims = [mc_samples] + probs.dim() * [-1]
-        probs_unsqeezed = probs.unsqueeze(0).expand(*expand_dims)  # [V N C D1 D2]
+        subsampled_input = subsampled_input.double()
+        probs = ndtr(subsampled_input)  # [N C D1 D2]
 
         # norm probs
-        norm_probs = probs / probs.sum(dim=1, keepdim=True)
-        norm_probs_unsqeezed = norm_probs.unsqueeze(0).expand(
-            *expand_dims
-        )  # [V N C D1 D2]
+        norm_factors = probs.sum(dim=1, keepdim=True)  # [N 1 D1 D2]
 
         # normal pdf
         normal = torch.distributions.Normal(0, 1)
-        pdf_vals = normal.log_prob(subsampled_input).exp()
-        pdf_vals_unsqeezed = pdf_vals.unsqueeze(0).expand(*expand_dims)  # [V N C D1 D2]
+        pdf_vals = normal.log_prob(subsampled_input).exp()  # [N C D1 D2]
 
         # labels
         distribution = self._make_distribution(subsampled_input)
@@ -118,8 +113,9 @@ class NormedNdtrNLLLossDerivatives(NLLLossDerivatives):
             probs.dtype
         )  # [V N C D1 D2]
 
-        return (
-            pdf_vals_unsqeezed
-            * (norm_probs_unsqeezed - samples_onehot_rearranged)
-            / probs_unsqeezed
+        ret_val = (
+            pdf_vals / norm_factors
+            - torch.nan_to_num(pdf_vals / probs) * samples_onehot_rearranged
         )
+
+        return ret_val.float()
