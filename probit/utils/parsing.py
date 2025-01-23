@@ -202,10 +202,10 @@ group.add_argument(
     help="Rank of low-rank covariance matrix part in the HET method",
 )
 group.add_argument(
-    "--mask-regex",
-    default=None,
+    "--last-layer-name",
+    default="fc",
     type=str,
-    help="Mask regex for Laplace",
+    help="Last layer's name for LLLaplace",
 )
 group.add_argument(
     "--use-sampling",
