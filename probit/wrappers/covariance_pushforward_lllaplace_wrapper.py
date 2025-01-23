@@ -157,12 +157,13 @@ class CovariancePushforwardLLLaplaceWrapper(DistributionalWrapper):
         for prior_prec in interval:
             logger.info(f"Trying {prior_prec}...")
             start_time = time.perf_counter()
-            self.prior_precision = prior_prec
-            self.covariance_kfac = self.get_covariance_kfac(
-                self.kfac, self.prior_precision
-            )
 
             try:
+                self.prior_precision = prior_prec
+                self.covariance_kfac = self.get_covariance_kfac(
+                    self.kfac, self.prior_precision
+                )
+
                 out_dist, targets = self.validate(
                     val_loader=val_loader,
                     channels_last=channels_last,
