@@ -31,7 +31,7 @@ from probit.utils import (
     spearmanr,
 )
 from probit.wrappers import (
-    CovariancePushforwardLaplaceWrapper2,
+    CovariancePushforwardLLLaplaceWrapper,
     DeepEnsembleWrapper,
     EDLWrapper,
     HETWrapper,
@@ -1162,7 +1162,7 @@ def get_bundle(  # noqa: C901
     is_distributional_het = isinstance(model, HETWrapper) and not args.use_sampling
     is_distributional = is_distributional_het or isinstance(
         model,
-        SNGPWrapper | CovariancePushforwardLaplaceWrapper2 | LinearizedSWAGWrapper,
+        SNGPWrapper | CovariancePushforwardLLLaplaceWrapper | LinearizedSWAGWrapper,
     )
 
     # Estimate containers
