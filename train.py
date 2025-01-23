@@ -41,7 +41,7 @@ from probit.utils import (
     wrap_model,
 )
 from probit.wrappers import (
-    CovariancePushforwardLaplaceWrapper2,
+    CovariancePushforwardLLLaplaceWrapper,
     LinearizedSWAGWrapper,
     PostNetWrapper,
     SNGPWrapper,
@@ -1048,7 +1048,7 @@ def validate(
 
 @torch.no_grad()
 def update_post_hoc_method(model, train_loader, hard_id_eval_loader, args):
-    if isinstance(model, CovariancePushforwardLaplaceWrapper2):
+    if isinstance(model, CovariancePushforwardLLLaplaceWrapper):
         if hard_id_eval_loader is None:
             msg = "For Laplace approximation, the ID eval loader has to be specified."
             raise ValueError(msg)
