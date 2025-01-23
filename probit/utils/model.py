@@ -18,13 +18,11 @@ from probit.models import (
 )
 from probit.wrappers import (
     BaselineWrapper,
-    # CovariancePushforwardLaplaceWrapper,
-    CovariancePushforwardLaplaceWrapper2,
+    CovariancePushforwardLLLaplaceWrapper,
     EDLWrapper,
     HETWrapper,
     LinearizedSWAGWrapper,
     PostNetWrapper,
-    SamplePushforwardLaplaceWrapper,
     SNGPWrapper,
     SWAGWrapper,
 )
@@ -126,7 +124,7 @@ def wrap_model(
     num_hidden_features,
     num_mc_samples,
     matrix_rank,
-    mask_regex,
+    last_layer_name,
     use_sampling,
     temperature,
     use_low_rank_cov,
@@ -151,7 +149,6 @@ def wrap_model(
     checkpoint_path,
     loss_fn,
     predictive_fn,
-    use_eigval_prior,
     prior_precision,
     gp_likelihood,
     approximate,
@@ -171,23 +168,14 @@ def wrap_model(
             use_sampling=use_sampling,
         )
     elif model_wrapper_name == "laplace":
-        kwargs = {
-            "model": model,
-            "loss_fn": loss_fn,
-            "predictive_fn": predictive_fn,
-            "rank": matrix_rank,
-            "use_eigval_prior": use_eigval_prior,
-            "mask_regex": mask_regex,
-            "prior_precision": prior_precision,
-            "weight_path": weight_paths[0],
-        }
-        if use_sampling:
-            kwargs["num_mc_samples"] = num_mc_samples
-            wrapped_model = SamplePushforwardLaplaceWrapper(**kwargs)
-        else:
-            del kwargs["rank"]  # TODO(bmucsanyi): temporary fix
-            del kwargs["use_eigval_prior"]  # TODO(bmucsanyi): temporary fix
-            wrapped_model = CovariancePushforwardLaplaceWrapper2(**kwargs)
+        wrapped_model = CovariancePushforwardLLLaplaceWrapper(
+            model=model,
+            loss_fn=loss_fn,
+            predictive_fn=predictive_fn,
+            last_layer_name=last_layer_name,
+            prior_precision=prior_precision,
+            weight_path=weight_paths[0],
+        )
     elif model_wrapper_name == "swag":
         kwargs = {
             "model": model,

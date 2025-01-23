@@ -1,5 +1,6 @@
 __all__ = [
     "BaselineWrapper",
+    "CovariancePushforwardLLLaplaceWrapper",
     "CovariancePushforwardLaplaceWrapper",
     "CovariancePushforwardLaplaceWrapper2",
     "DeepEnsembleWrapper",
@@ -11,6 +12,10 @@ __all__ = [
     "SWAGWrapper",
     "SamplePushforwardLaplaceWrapper",
 ]
+
+from covariance_pushforward_lllaplace_wrapper import (
+    CovariancePushforwardLLLaplaceWrapper,
+)
 
 from .baseline_wrapper import BaselineWrapper
 from .covariance_pushforward_laplace_wrapper import CovariancePushforwardLaplaceWrapper
