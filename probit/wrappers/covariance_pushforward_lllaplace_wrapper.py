@@ -76,7 +76,7 @@ class CovariancePushforwardLLLaplaceWrapper(DistributionalWrapper):
             self.model.forward_features(x), pre_logits=True
         )  # [B, D]
         diag_A, B = self.covariance_kfac[0]  # [C], [D, D]
-        diag_C = self.covariance_kfac[1]  # [C]
+        diag_C = self.covariance_kfac[1][0]  # [C]
         multipliers = ((pre_logits @ B) * pre_logits).sum(dim=1)  # [B]
 
         mean = self.model.get_classifier()(pre_logits)  # [B, C]
