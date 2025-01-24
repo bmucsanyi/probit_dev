@@ -170,6 +170,8 @@ class CovariancePushforwardLLLaplaceWrapper(DistributionalWrapper):
                 )
                 result = self.get_ece(out_dist, targets).item()
                 accuracy = out_dist.argmax(dim=-1).eq(targets).float().mean()
+
+                np.nan_to_num(result, nan=float("inf"))
             except RuntimeError as error:
                 logger.info(f"Caught an exception in validate: {error}")
                 result = float("inf")
