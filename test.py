@@ -1197,23 +1197,21 @@ def get_bundle(  # noqa: C901
         is_distributional and link != "softmax"
     ):
         if is_distributional:
-            if link == "log":
-                suffixes = ["link", "link_mc"]
+            if link == "softmax":
+                suffixes = ["laplace_bridge"]
+            elif link == "log":
+                suffixes = ["link"]
             elif link == "probit":
-                suffixes = ["link_normcdf_output", "link_mc"]
+                suffixes = ["link_normcdf_output"]
             elif link == "logit":
                 suffixes = [
                     "link_sigmoid_output",
                     "link_sigmoid_product_output",
-                    "link_mc",
                 ]
         else:
             suffixes = ["edl"]
 
         for suffix in suffixes:
-            if suffix.endswith("mc"):
-                continue
-
             log_bmas = torch.empty(
                 num_samples, model.num_classes, device=storage_device
             )
@@ -1233,22 +1231,18 @@ def get_bundle(  # noqa: C901
 
     if is_distributional:
         if link == "log":
-            suffixes = ["link", "link_mc"]
+            suffixes = ["link"]
         elif link == "softmax":
-            suffixes = ["laplace_bridge", "mean_field", "mc"]
+            suffixes = ["laplace_bridge", "mean_field"]
         elif link == "probit":
-            suffixes = ["link_normcdf_output", "link_mc"]
+            suffixes = ["link_normcdf_output"]
         elif link == "logit":
             suffixes = [
                 "link_sigmoid_output",
                 "link_sigmoid_product_output",
-                "link_mc",
             ]
 
         for suffix in suffixes:
-            if suffix.endswith("mc"):
-                continue
-
             log_bmas = torch.empty(
                 num_samples, model.num_classes, device=storage_device
             )
@@ -1432,15 +1426,18 @@ def convert_inference_res(inference_res, time_forward, args):
                 log_bma = log_act_fn(logit)
                 handle_bma(log_bma, converted_inference_res, suffix)
 
-        if link != "softmax":
-            for suffix in suffixes:
-                if suffix.endswith("mc"):
-                    continue
+        for suffix in suffixes:
+            if suffix.endswith("mc") or (
+                link == "softmax" and suffix != "laplace_bridge"
+            ):
+                continue
 
-                predictive_name = f"{link}_{suffix}"
-                dirichlet_fn = get_dirichlet(predictive_name, args.approximate)
-                alpha = dirichlet_fn(mean, var)
-                handle_alpha(alpha, converted_inference_res, suffix)
+            predictive_name = f"{link}_{suffix}"
+            dirichlet_fn = get_dirichlet(
+                predictive_name, args.approximate, args.use_correction
+            )
+            alpha = dirichlet_fn(mean, var)
+            handle_alpha(alpha, converted_inference_res, suffix)
 
     elif len(inference_res) == 1 and inference_res[0].ndim == 3:
         samples = inference_res[0]
