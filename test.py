@@ -1193,9 +1193,7 @@ def get_bundle(  # noqa: C901
             jensen_shannon_divergences = torch.zeros(num_samples, device=storage_device)
             estimates[f"mc_{i}_jensen_shannon_divergences"] = jensen_shannon_divergences
 
-    if isinstance(model, EDLWrapper | PostNetWrapper) or (
-        is_distributional and link != "softmax"
-    ):
+    if isinstance(model, EDLWrapper | PostNetWrapper) or is_distributional:
         if is_distributional:
             if link == "softmax":
                 suffixes = ["laplace_bridge"]
