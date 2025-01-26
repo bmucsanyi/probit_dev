@@ -197,6 +197,17 @@ def log_link_dirichlet(
     )
 
 
+def softmax_laplace_bridge_dirichlet(
+    mean: torch.Tensor,
+    var: torch.Tensor,
+    *,
+    use_correction: bool = True,
+) -> torch.Tensor:
+    params = get_laplace_bridge_approximation(mean, var, use_correction=use_correction)
+
+    return params
+
+
 def probit_link_mc(
     mean: torch.Tensor,
     var: torch.Tensor,
@@ -527,14 +538,17 @@ DIRICHLET_DICT = {
     "logit_link_sigmoid_product_output": logit_link_sigmoid_product_output_dirichlet,
     "probit_link_normcdf_output": probit_link_normcdf_output_dirichlet,
     "log_link": log_link_dirichlet,
+    "softmax_laplace_bridge": softmax_laplace_bridge_dirichlet,
 }
 
 
-def get_dirichlet(dirichlet_str, approximate):
+def get_dirichlet(dirichlet_str, approximate, use_correction):
     dirichlet_fn = DIRICHLET_DICT[dirichlet_str]
 
     if dirichlet_str.startswith("probit"):
         dirichlet_fn = partial(dirichlet_fn, approximate=approximate)
+    elif dirichlet_str.startswith("softmax"):
+        dirichlet_fn = partial(dirichlet_fn, use_correction=use_correction)
 
     return dirichlet_fn
 
