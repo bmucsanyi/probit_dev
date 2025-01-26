@@ -389,6 +389,8 @@ def evaluate_on_correctness_prediction(
         prefixes.append("link")
     if "laplace_bridge_entropies_of_bma" in estimates:
         prefixes.append("laplace_bridge")
+    if "laplace_bridge_dirichlet_entropies_of_bma" in estimates:
+        prefixes.append("laplace_bridge_dirichlet")
     if "mean_field_entropies_of_bma" in estimates:
         prefixes.append("mean_field")
     if "edl_dirichlet_entropies_of_bma" in estimates:
@@ -477,6 +479,8 @@ def evaluate_on_abstained_prediction(
         prefixes.append("link")
     if "laplace_bridge_entropies_of_bma" in estimates:
         prefixes.append("laplace_bridge")
+    if "laplace_bridge_dirichlet_entropies_of_bma" in estimates:
+        prefixes.append("laplace_bridge_dirichlet")
     if "mean_field_entropies_of_bma" in estimates:
         prefixes.append("mean_field")
     if "edl_dirichlet_entropies_of_bma" in estimates:
@@ -649,6 +653,8 @@ def evaluate_on_proper_scoring_and_calibration(
         prefixes.append("link")
     if "laplace_bridge_entropies_of_bma" in estimates:
         prefixes.append("laplace_bridge")
+    if "laplace_bridge_dirichlet_entropies_of_bma" in estimates:
+        prefixes.append("laplace_bridge_dirichlet")
     if "mean_field_entropies_of_bma" in estimates:
         prefixes.append("mean_field")
     if "edl_dirichlet_entropies_of_bma" in estimates:
@@ -817,6 +823,8 @@ def evaluate_on_correlation_of_decomposition(
         prefixes.append("link")
     if "laplace_bridge_entropies_of_bma" in estimates:
         prefixes.append("laplace_bridge")
+    if "laplace_bridge_dirichlet_entropies_of_bma" in estimates:
+        prefixes.append("laplace_bridge_dirichlet")
     if "mean_field_entropies_of_bma" in estimates:
         prefixes.append("mean_field")
     if "edl_dirichlet_entropies_of_bma" in estimates:
@@ -831,6 +839,9 @@ def evaluate_on_correlation_of_decomposition(
         prefixes.append("link_dirichlet")
 
     for prefix in prefixes:
+        if f"{prefix}_expected_entropies" not in estimates:
+            continue
+
         # Information-theoretical decomposition
         entropies_of_bma = estimates[f"{prefix}_entropies_of_bma"]
         expected_entropies = estimates[f"{prefix}_expected_entropies"]
@@ -1053,6 +1064,8 @@ def calc_correctnesses(estimates, log_probs, targets, is_soft):
         prefixes.append("link")
     if "laplace_bridge_entropies_of_bma" in estimates:
         prefixes.append("laplace_bridge")
+    if "laplace_bridge_dirichlet_entropies_of_bma" in estimates:
+        prefixes.append("laplace_bridge_dirichlet")
     if "mean_field_entropies_of_bma" in estimates:
         prefixes.append("mean_field")
     if "edl_dirichlet_entropies_of_bma" in estimates:
