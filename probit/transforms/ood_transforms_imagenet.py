@@ -34,7 +34,7 @@ ZOOM_BLUR_C = [
 ]
 FOG_C = [(1.5, 2), (2, 2), (2.5, 1.7), (2.5, 1.5), (3, 1.4)]
 FROST_IMAGES = [
-    cv2.imread(f"untangle/transforms/assets/frost{i}.{'png' if i <= 3 else 'jpg'}")
+    cv2.imread(f"probit/transforms/assets/frost{i}.{'png' if i <= 3 else 'jpg'}")
     for i in range(1, 7)
 ]
 FROST_C = [(1, 0.4), (0.8, 0.6), (0.7, 0.7), (0.65, 0.7), (0.6, 0.75)]
