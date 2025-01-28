@@ -202,6 +202,9 @@ class CovariancePushforwardLLLaplaceWrapper(DistributionalWrapper):
             mean, var = self(input)
             out = self.predictive_fn(mean, var)
 
+            if out.device.type == "cuda":
+                torch.cuda.synchronize()
+
             output_means.append(out)
             targets.append(target)
 
