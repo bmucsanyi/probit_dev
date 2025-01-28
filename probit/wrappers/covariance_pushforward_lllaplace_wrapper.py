@@ -213,12 +213,11 @@ class CovariancePushforwardLLLaplaceWrapper(DistributionalWrapper):
     def get_kfac_loader(self, train_loader, channels_last):
         """Compute the KFAC approximation based on a list of mini-batches `datalist`."""
         # Accumulate KFAC approximations over all mini-batches
-        num_data = 0
         for i, (X, y) in enumerate(train_loader):
             if i % 500 == 0:
                 print(f"Processing batch {i + 1}...")
             batch_size = X.shape[0]
-            new_num_data = num_data + batch_size
+
             if i == 0:
                 # Initialize `kfac`.
                 # If there is only one mini-batch, return the KFAC approximation.
@@ -234,17 +233,14 @@ class CovariancePushforwardLLLaplaceWrapper(DistributionalWrapper):
                 kfac = self.add_kfacs(
                     kfac,
                     mb_kfac,
-                    alpha1=num_data / new_num_data,
-                    alpha2=batch_size / new_num_data,
+                    alpha1=1,
+                    alpha2=batch_size,
                 )
 
                 # Free VRAM
                 del mb_kfac
                 torch.cuda.empty_cache()
                 gc.collect()
-
-            # Update number of data points
-            num_data = new_num_data
 
         return kfac
 
