@@ -212,6 +212,8 @@ class CovariancePushforwardLLLaplaceWrapper(DistributionalWrapper):
         # Accumulate KFAC approximations over all mini-batches
         num_data = 0
         for i, (X, y) in enumerate(train_loader):
+            if i % 500 == 0:
+                print(f"Processing batch {i + 1}...")
             batch_size = X.shape[0]
             new_num_data = num_data + batch_size
             if i == 0:
