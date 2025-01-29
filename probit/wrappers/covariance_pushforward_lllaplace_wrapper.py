@@ -326,13 +326,14 @@ class CovariancePushforwardLLLaplaceWrapper(DistributionalWrapper):
             for param in self.model.parameters():
                 if param.requires_grad:
                     param_factors = []
-                    kfac.append(param_factors)
                     first_factor = param.kfac[0].detach()
                     param_factors.append(batch_size * first_factor)
 
                     if len(param.kfac) == 2:
                         second_factor = param.kfac[1].detach()
                         param_factors.append(second_factor)
+
+                    kfac.append(param_factors)
 
         # Free GPU memory
         del loss
