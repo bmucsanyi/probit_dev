@@ -214,6 +214,7 @@ class CovariancePushforwardLLLaplaceWrapper(DistributionalWrapper):
         """Compute the KFAC approximation based on a list of mini-batches `datalist`."""
         # Accumulate KFAC approximations over all mini-batches
         for i, (X, y) in enumerate(train_loader):
+            num_total = 0
             if i % 500 == 0:
                 print(f"Processing batch {i + 1}...")
             batch_size = X.shape[0]
@@ -233,14 +234,16 @@ class CovariancePushforwardLLLaplaceWrapper(DistributionalWrapper):
                 kfac = self.add_kfacs(
                     kfac,
                     mb_kfac,
-                    alpha1=1,
-                    alpha2=batch_size,
+                    num_elem1=num_total,
+                    num_elem2=batch_size,
                 )
 
                 # Free VRAM
                 del mb_kfac
                 torch.cuda.empty_cache()
                 gc.collect()
+
+            num_total += batch_size
 
         return kfac
 
@@ -307,6 +310,7 @@ class CovariancePushforwardLLLaplaceWrapper(DistributionalWrapper):
 
         # Forward and backward pass
         X, y = X.to(device), y.to(device)
+        batch_size = X.shape[0]
 
         if channels_last:
             X = X.contiguous(memory_format=torch.channels_last)
@@ -318,11 +322,16 @@ class CovariancePushforwardLLLaplaceWrapper(DistributionalWrapper):
                 loss.backward()
 
             # Extract KFAC matrix from model
-            kfac = [
-                [elem.detach() for elem in param.kfac]
-                for param in self.model.parameters()
-                if param.requires_grad
-            ]
+            kfac = []
+            for param in self.model.parameters():
+                if param.requires_grad:
+                    kfac.append([])
+                    first_factor = param.kfac[0].detach()
+                    kfac[-1].append(batch_size * first_factor)
+
+                    if len(param.kfac) == 2:
+                        second_factor = param.kfac[1].detach()
+                        kfac[-1].append(second_factor)
 
         # Free GPU memory
         del loss
@@ -332,9 +341,20 @@ class CovariancePushforwardLLLaplaceWrapper(DistributionalWrapper):
         return kfac
 
     @staticmethod
-    def add_kfacs(kfac1, kfac2, alpha1=1.0, alpha2=1.0):
-        """Add two KFAC approximations by adding all corresponding factors."""
-        return [
-            tuple(alpha1 * F1 + alpha2 * F2 for F1, F2 in zip(B1, B2, strict=True))
-            for B1, B2 in zip(kfac1, kfac2, strict=True)
-        ]
+    def add_kfacs(kfac1, kfac2, num_elem1, num_elem2):
+        """Add two KFAC approximations."""
+        ret = []
+        for param1, param2 in zip(kfac1, kfac2, strict=True):
+            B1 = param1[0]
+            B2 = param2[0]
+            ret.append(B1 + B2)
+
+            if len(param1) == 2:
+                A1 = param1[1]
+                A2 = param2[1]
+                num_elem_total = num_elem1 + num_elem2
+                ret.append(
+                    num_elem1 / num_elem_total * A1 + num_elem2 / num_elem_total * A2
+                )
+
+        return ret
