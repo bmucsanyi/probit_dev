@@ -325,13 +325,14 @@ class CovariancePushforwardLLLaplaceWrapper(DistributionalWrapper):
             kfac = []
             for param in self.model.parameters():
                 if param.requires_grad:
-                    kfac.append([])
+                    param_factors = []
+                    kfac.append(param_factors)
                     first_factor = param.kfac[0].detach()
-                    kfac[-1].append(batch_size * first_factor)
+                    param_factors.append(batch_size * first_factor)
 
                     if len(param.kfac) == 2:
                         second_factor = param.kfac[1].detach()
-                        kfac[-1].append(second_factor)
+                        param_factors.append(second_factor)
 
         # Free GPU memory
         del loss
@@ -343,18 +344,20 @@ class CovariancePushforwardLLLaplaceWrapper(DistributionalWrapper):
     @staticmethod
     def add_kfacs(kfac1, kfac2, num_elem1, num_elem2):
         """Add two KFAC approximations."""
-        ret = []
+        kfac3 = []
         for param1, param2 in zip(kfac1, kfac2, strict=True):
+            param3 = []
+            kfac3.append(param3)
             B1 = param1[0]
             B2 = param2[0]
-            ret.append(B1 + B2)
+            param3.append(B1 + B2)
 
             if len(param1) == 2:
                 A1 = param1[1]
                 A2 = param2[1]
                 num_elem_total = num_elem1 + num_elem2
-                ret.append(
+                param3.append(
                     num_elem1 / num_elem_total * A1 + num_elem2 / num_elem_total * A2
                 )
 
-        return ret
+        return kfac3
