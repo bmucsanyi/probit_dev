@@ -598,6 +598,12 @@ group.add_argument(
     help="Sets a prior precision in Laplace",
 )
 group.add_argument(
+    "--ggn-scaler",
+    type=float,
+    default=1.0,
+    help="Sets a scaling to the GGN, equivalent to a tempered likelihood",
+)
+group.add_argument(
     "--log-prior-prec-min",
     type=float,
     default=-1,

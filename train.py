@@ -439,6 +439,7 @@ def main():
             approximate=args.approximate,
         ),
         prior_precision=args.prior_precision,
+        ggn_scaler=args.ggn_scaler,
         gp_likelihood=args.gp_likelihood,
         approximate=args.approximate,
         verbose=args.rank == 0,

@@ -30,6 +30,7 @@ class CovariancePushforwardLLLaplaceWrapper(DistributionalWrapper):
         predictive_fn,
         last_layer_name,
         prior_precision,
+        ggn_scaler,
         weight_path,
     ):
         super().__init__(model)
@@ -53,6 +54,7 @@ class CovariancePushforwardLLLaplaceWrapper(DistributionalWrapper):
             )
 
         self.prior_precision = prior_precision
+        self.ggn_scaler = ggn_scaler
 
         self.predictive_fn = predictive_fn
         self.is_laplace_approximated = False
@@ -340,7 +342,23 @@ class CovariancePushforwardLLLaplaceWrapper(DistributionalWrapper):
         torch.cuda.empty_cache()
         gc.collect()
 
-        return kfac
+        return CovariancePushforwardLLLaplaceWrapper.scale_kfac(kfac, self.ggn_scaler)
+
+    @staticmethod
+    def scale_kfac(kfac, scaler):
+        """Scales a KFAC approximation."""
+        scaled_kfac = []
+        for param in kfac:
+            scaled_param = []
+            scaled_kfac.append(scaled_param)
+            B = param[0]
+            scaled_param.append(scaler * B)
+
+            if len(param) == 2:
+                A = param[1]
+                scaled_param.append(A)
+
+        return scaled_kfac
 
     @staticmethod
     def add_kfacs(kfac1, kfac2, num_elem1, num_elem2):

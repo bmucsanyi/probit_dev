@@ -150,6 +150,7 @@ def wrap_model(
     loss_fn,
     predictive_fn,
     prior_precision,
+    ggn_scaler,
     gp_likelihood,
     approximate,
     verbose,
@@ -174,6 +175,7 @@ def wrap_model(
             predictive_fn=predictive_fn,
             last_layer_name=last_layer_name,
             prior_precision=prior_precision,
+            ggn_scaler=ggn_scaler,
             weight_path=weight_paths[0],
         )
     elif model_wrapper_name == "swag":
