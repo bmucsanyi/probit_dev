@@ -101,7 +101,7 @@ def binary_brier(confidences, targets):
 
 
 def multiclass_log_probability(log_preds, targets):
-    return -F.cross_entropy(log_preds, targets)
+    return log_preds[torch.arange(targets.shape[0]), targets].mean()
 
 
 def multiclass_brier(log_preds, targets, is_soft_targets):
