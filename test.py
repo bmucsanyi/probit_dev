@@ -779,11 +779,6 @@ def evaluate_on_proper_scoring_and_calibration(
         if is_soft_dataset:
             gt_soft_labels = targets["gt_soft_labels"]
 
-            metrics[f"{key_prefix}{prefix}_log_prob_score_soft_bma_aleatoric"] = (
-                multiclass_log_probability(
-                    log_probs[f"{prefix}_log_bmas"], gt_soft_labels
-                ).item()
-            )
             metrics[f"{key_prefix}{prefix}_brier_score_soft_bma_aleatoric"] = (
                 multiclass_brier(
                     log_probs[f"{prefix}_log_bmas"],
