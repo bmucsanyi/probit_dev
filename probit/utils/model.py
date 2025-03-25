@@ -14,6 +14,7 @@ from probit.models import (
     simple_convnet_3_256,
     wide_resnet_c_26_10,
     wide_resnet_c_fixup_26_10,
+    wide_resnet_c_preact_26_5,
     wide_resnet_c_preact_26_10,
 )
 from probit.wrappers import (
@@ -34,8 +35,9 @@ PROBIT_STR_TO_MODEL_CLASS = {
     "resnet_fixup_50": resnet_fixup_50,
     "wide_resnet_c_26_10": wide_resnet_c_26_10,
     "wide_resnet_c_fixup_26_10": wide_resnet_c_fixup_26_10,
-    "wide_resnet_c_preact_26_10": wide_resnet_c_preact_26_10,
     "resnet_c_preact_26": resnet_c_preact_26,
+    "wide_resnet_c_preact_26_5": wide_resnet_c_preact_26_5,
+    "wide_resnet_c_preact_26_10": wide_resnet_c_preact_26_10,
     "simple_convnet_3_256": simple_convnet_3_256,
     "simple_convnet_3_32": simple_convnet_3_32,
 }

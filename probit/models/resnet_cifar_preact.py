@@ -30,6 +30,29 @@ def wide_resnet_c_preact_26_10(
     return model
 
 
+def wide_resnet_c_preact_26_5(
+    num_classes=10,
+    in_chans=3,
+    downsample_type="conv",
+    act_layer=nn.ReLU,
+    *,
+    init_bias_minus_log_c=False,
+):
+    """Constructs a WideResNet-26-5 model."""
+    model = ResNetCPreAct(
+        block_fn=BasicBlockCPreAct,
+        depth=26,
+        width_multiplier=5,
+        num_classes=num_classes,
+        in_chans=in_chans,
+        downsample_type=downsample_type,
+        act_layer=act_layer,
+        init_bias_minus_log_c=init_bias_minus_log_c,
+    )
+
+    return model
+
+
 def resnet_c_preact_26(
     num_classes=10,
     in_chans=3,
