@@ -223,6 +223,8 @@ def transforms_imagenet_eval(
 ):
     tfl = []
 
+    intermediate_img_size = 224
+
     if isinstance(img_size, tuple | list):
         if len(img_size) != 2:
             msg = "Invalid image size provided"
@@ -231,6 +233,7 @@ def transforms_imagenet_eval(
     else:
         scale_size = math.floor(img_size / crop_pct)
         scale_size = (scale_size, scale_size)
+        img_size = (img_size, img_size)
 
     # Default crop model is center
     # Aspect ratio is preserved, crops center within image, no borders are added,
@@ -246,7 +249,7 @@ def transforms_imagenet_eval(
     else:
         # Resize shortest edge to matching target dim for non-square target
         tfl += [ResizeKeepRatio(scale_size)]
-    tfl += [transforms.CenterCrop(img_size)]
+    tfl += [transforms.CenterCrop(intermediate_img_size)]
 
     # Add OOD transformations
     if ood_transform_type is not None and severity > 0:
@@ -254,6 +257,16 @@ def transforms_imagenet_eval(
             ood_transform_type, severity, dataset_name="imagenet"
         )
         tfl += [ood_transform]
+
+    # Resize to actual requested size: OOD transforms only support 224x224
+    if img_size[0] == img_size[1]:
+        tfl += [
+            transforms.Resize(
+                img_size[0], interpolation=STR_TO_INTERPOLATION[interpolation]
+            )
+        ]
+    else:
+        tfl += [ResizeKeepRatio(img_size)]
 
     if use_prefetcher:
         # Prefetcher and collate will handle tensor conversion and norm
