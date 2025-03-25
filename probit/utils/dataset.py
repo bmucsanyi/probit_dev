@@ -1,7 +1,7 @@
 """Dataset utilities."""
 
 import torch
-from torchvision.datasets import CIFAR10
+from torchvision.datasets import CIFAR10, CIFAR100
 
 from probit.datasets import (
     DATASET_NAME_TO_PATH,
@@ -72,6 +72,14 @@ def create_dataset(
             )
         elif name == "cifar10":
             dataset = CIFAR10(
+                root=root,
+                train=split == "train",
+                transform=transform,
+                target_transform=target_transform,
+                download=download,
+            )
+        elif name == "cifar100":
+            dataset = CIFAR100(
                 root=root,
                 train=split == "train",
                 transform=transform,

@@ -21,7 +21,7 @@ parser.add_argument(
     "--dataset",
     type=str,
     default="imagenet",
-    choices=["imagenet", "cifar10"],
+    choices=["imagenet", "cifar10", "cifar100"],
     help="Dataset name",
 )
 parser.add_argument(
@@ -356,13 +356,19 @@ def get_cmd_str(args):
                 f"cp {args.datasets_root_path}/real.json "
                 "/scratch_local/$SLURM_JOB_USER-$SLURM_JOBID/datasets/real.json"
             )
-        else:  # "cifar10"
+        elif args.dataset == "cifar10":
             setup_str += (
                 f"cp -r {args.datasets_root_path}/cifar-10-batches-py "
                 "/scratch_local/$SLURM_JOB_USER-$SLURM_JOBID/datasets/"
                 "cifar-10-batches-py\n"
                 f"cp -r {args.datasets_root_path}/CIFAR10H "
                 "/scratch_local/$SLURM_JOB_USER-$SLURM_JOBID/datasets/CIFAR10H"
+            )
+        else:  # cifar100
+            setup_str += (
+                f"cp -r {args.datasets_root_path}/cifar-100-python "
+                "/scratch_local/$SLURM_JOB_USER-$SLURM_JOBID/datasets/"
+                "cifar-100-python"
             )
 
     # Start the wandb agent inside a singularity container
