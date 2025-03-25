@@ -1,4 +1,4 @@
-"ImageNet-ReaL dataset."
+"""ImageNet-ReaL dataset."""
 
 import json
 from pathlib import Path

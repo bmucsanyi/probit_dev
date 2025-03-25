@@ -1,10 +1,11 @@
 """Dataset utilities."""
 
 import torch
-from torchvision.datasets import CIFAR10, CIFAR100
+from torchvision.datasets import CIFAR10
 
 from probit.datasets import (
     DATASET_NAME_TO_PATH,
+    CIFAR100Split,
     ImageNet,
     SoftDataset,
     SoftImageNet,
@@ -79,9 +80,9 @@ def create_dataset(
                 download=download,
             )
         elif name == "cifar100":
-            dataset = CIFAR100(
+            dataset = CIFAR100Split(
                 root=root,
-                train=split == "train",
+                split=split,
                 transform=transform,
                 target_transform=target_transform,
                 download=download,
@@ -118,7 +119,7 @@ def create_dataset(
         msg = "Unsupported dataset type"
         raise ValueError(msg)
 
-    if ood_transform_type is not None and severity > 0:
+    if hasattr(dataset, "set_ood") and ood_transform_type is not None and severity > 0:
         dataset.set_ood()
 
     if subset < 1.0:
