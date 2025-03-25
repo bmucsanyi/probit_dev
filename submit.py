@@ -27,19 +27,19 @@ parser.add_argument(
 parser.add_argument(
     "--simg-path",
     type=Path,
-    default=Path("/mnt/lustre/work/oh/owl569/repos/probit/probit.simg"),
+    default=Path("/mnt/lustre/work/hennig/owl569/repos/probit/probit.simg"),
     help="Path to Singularity image",
 )
 parser.add_argument(
     "--repo-path",
     type=Path,
-    default=Path("/mnt/lustre/work/oh/owl569/repos/probit"),
+    default=Path("/mnt/lustre/work/hennig/owl569/repos/probit"),
     help="Path to repository",
 )
 parser.add_argument(
     "--datasets-root-path",
     type=Path,
-    default=Path("/mnt/lustre/work/oh/owl569/datasets"),
+    default=Path("/mnt/lustre/work/hennig/owl569/datasets"),
     help="Root path of datasets",
 )
 parser.add_argument("--job-name", type=str, default=None, help="Job name")
@@ -75,7 +75,7 @@ parser.add_argument(
 parser.add_argument(
     "--log-path",
     type=Path,
-    default=Path("/mnt/lustre/work/oh/owl569/logs"),
+    default=Path("/mnt/lustre/work/hennig/owl569/logs"),
     help="The output file will be stored in this folder",
 )
 parser.add_argument(
