@@ -1165,6 +1165,9 @@ def get_bundle(  # noqa: C901
         # Bregman Aleatoric uncertainty
         gt_aleatorics_bregman = torch.empty(num_samples, device=storage_device)
         targets["gt_aleatorics_bregman"] = gt_aleatorics_bregman
+    else:
+        gt_soft_labels = None
+        gt_aleatorics_bregman = None
 
     link = args.predictive.split("_")[0]
     is_distributional_het = isinstance(model, HETWrapper) and not args.use_sampling
