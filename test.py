@@ -8,6 +8,7 @@ from pathlib import Path
 import torch
 import torch.nn.functional as F
 import torch.nn.parallel
+from torch.distributions import MultivariateNormal
 
 from probit.utils import (
     StatMeter,
@@ -34,6 +35,7 @@ from probit.wrappers import (
     CovariancePushforwardLLLaplaceWrapper,
     DeepEnsembleWrapper,
     EDLWrapper,
+    FullCovariancePushforwardLLLaplaceWrapper,
     HETWrapper,
     LinearizedSWAGWrapper,
     PostNetWrapper,
@@ -1173,7 +1175,10 @@ def get_bundle(  # noqa: C901
     is_distributional_het = isinstance(model, HETWrapper) and not args.use_sampling
     is_distributional = is_distributional_het or isinstance(
         model,
-        SNGPWrapper | CovariancePushforwardLLLaplaceWrapper | LinearizedSWAGWrapper,
+        SNGPWrapper
+        | CovariancePushforwardLLLaplaceWrapper
+        | FullCovariancePushforwardLLLaplaceWrapper
+        | LinearizedSWAGWrapper,
     )
 
     # Estimate containers
@@ -1184,6 +1189,18 @@ def get_bundle(  # noqa: C901
     if is_distributional:
         vars_ = StatMeter()
         stats["vars"] = vars_
+
+        if args.method_name == "laplace_full":
+            var_sum_qc = StatMeter()
+            var_1_per_sum_qc = StatMeter()
+            sum_var_qc = StatMeter()
+            l2_dist = StatMeter()
+            abs_dist = StatMeter()
+            stats["var_sum_qc"] = var_sum_qc
+            stats["var_1_per_sum_qc"] = var_1_per_sum_qc
+            stats["sum_var_qc"] = sum_var_qc
+            stats["l2_dist"] = l2_dist
+            stats["abs_dist"] = abs_dist
 
         if args.predictive != "softmax":
             norm_factors = StatMeter()
@@ -1388,6 +1405,32 @@ def convert_inference_res(inference_res, time_forward, args):
     if len(inference_res) == 2:  # is_distributional
         mean, var = inference_res
 
+        if args.method_name == "laplace-full":
+            act_fn = get_activation(
+                args.predictive, args.approximate, unnormalized=True
+            )
+
+            # Switcheroo
+            cov = var  # [B, C, C]
+            var = torch.diagonal(cov, dim1=1, dim2=2)  # [B, C]
+
+            dist = MultivariateNormal(mean, cov)
+            samples = dist.sample((10000,)).permute(1, 0, 2)  # [B, S, C]
+            act_samples = act_fn(samples)
+            sum_act_samples = act_samples.sum(dim=-1)  # [B, S]
+
+            var_sum_qc = sum_act_samples.var(dim=1)  # [B]
+            var_1_per_sum_qc = sum_act_samples.reciprocal().var(dim=1)  # [B]
+            sum_var_qc = act_samples.var(dim=1).sum(dim=-1)  # [B]
+            l2_dist = (var_sum_qc - sum_var_qc) ** 2  # [B]
+            abs_dist = (var_sum_qc - sum_var_qc).abs()  # [B]
+
+            converted_inference_res["var_sum_qc"] = var_sum_qc
+            converted_inference_res["var_1_per_sum_qc"] = var_1_per_sum_qc
+            converted_inference_res["sum_var_qc"] = sum_var_qc
+            converted_inference_res["l2_dist"] = l2_dist
+            converted_inference_res["abs_dist"] = abs_dist
+
         converted_inference_res["vars"] = var.flatten()
 
         if "softmax" not in args.predictive:
@@ -1481,7 +1524,16 @@ def update_logit_based(
     stats,
 ):
     for key in inference_res:
-        if key in {"time_forward", "vars", "norm_factors"}:
+        if key in {
+            "time_forward",
+            "vars",
+            "norm_factors",
+            "var_sum_qc",
+            "var_1_per_sum_qc",
+            "sum_var_qc",
+            "l2_dist",
+            "abs_dist",
+        }:
             stats[key].update(inference_res[key])
         elif key.endswith("log_bmas"):
             log_probs[key][indices] = inference_res[key]

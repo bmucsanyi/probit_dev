@@ -5,6 +5,7 @@ __all__ = [
     "CovariancePushforwardLaplaceWrapper2",
     "DeepEnsembleWrapper",
     "EDLWrapper",
+    "FullCovariancePushforwardLLLaplaceWrapper",
     "HETWrapper",
     "LinearizedSWAGWrapper",
     "PostNetWrapper",
@@ -23,6 +24,9 @@ from .covariance_pushforward_lllaplace_wrapper import (
 )
 from .deep_ensemble_wrapper import DeepEnsembleWrapper
 from .edl_wrapper import EDLWrapper
+from .full_covariance_pushforward_lllaplace_wrapper import (
+    FullCovariancePushforwardLLLaplaceWrapper,
+)
 from .het_wrapper import HETWrapper
 from .linearized_swag_wrapper import LinearizedSWAGWrapper
 from .postnet_wrapper import PostNetWrapper
