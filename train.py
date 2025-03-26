@@ -2,6 +2,7 @@
 
 import datetime
 import logging
+import math
 import re
 import time
 from argparse import Namespace
@@ -12,6 +13,7 @@ import torch
 import torch.distributed
 from timm.optim import create_optimizer_v2
 from timm.scheduler import create_scheduler_v2
+from torch import nn
 from torch.nn.parallel import DistributedDataParallel
 
 from probit.utils import (
@@ -399,6 +401,11 @@ def main():
         verbose=args.rank == 0,
         model_checkpoint_path=args.initial_model_checkpoint_path,
     )
+
+    if "vit" in args.model_name and (
+        "sigmoid" in args.predictive or "normcdf" in args.predictive
+    ):
+        nn.init.constant_(model.head.bias, -math.log(model.num_classes))
 
     model = wrap_model(
         model=model,
