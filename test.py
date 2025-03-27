@@ -1550,9 +1550,11 @@ def convert_inference_res(inference_res, time_forward, args):  # noqa: C901
             kl_normcdf = kl_divergence(gt_log_bmas, link_normcdf_output_log_bmas)
             converted_inference_res["kl_normcdf"] = kl_normcdf
         elif link == "logit":
-            link_sigmoid_output = converted_inference_res["link_sigmoid_output"]
+            link_sigmoid_output = converted_inference_res[
+                "link_sigmoid_output_log_bmas"
+            ]
             link_sigmoid_product_output = converted_inference_res[
-                "link_sigmoid_product_output"
+                "link_sigmoid_product_output_log_bmas"
             ]
 
             kl_sigmoid = kl_divergence(gt_log_bmas, link_sigmoid_output)
