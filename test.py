@@ -31,6 +31,7 @@ from probit.utils import (
     relative_area_under_lift_curve,
     spearmanr,
 )
+from probit.utils.metric import kl_divergence
 from probit.wrappers import (
     CovariancePushforwardLLLaplaceWrapper,
     DeepEnsembleWrapper,
@@ -1202,12 +1203,37 @@ def get_bundle(  # noqa: C901
             stats["l2_dist"] = l2_dist
             stats["abs_dist"] = abs_dist
 
+        kl_mc_10 = StatMeter()
+        stats["kl_mc_10"] = kl_mc_10
+        kl_mc_100 = StatMeter()
+        stats["kl_mc_100"] = kl_mc_100
+        kl_mc_1000 = StatMeter()
+        stats["kl_mc_1000"] = kl_mc_1000
+
+        link = args.predictive.split("_")[0]
+        if link == "log":
+            kl_exp = StatMeter()
+            stats["kl_exp"] = kl_exp
+        elif link == "softmax":
+            kl_laplace_bridge = StatMeter()
+            stats["kl_laplace_bridge"] = kl_laplace_bridge
+            kl_mean_field = StatMeter()
+            stats["kl_mean_field"] = kl_mean_field
+        elif link == "probit":
+            kl_normcdf = StatMeter()
+            stats["kl_normcdf"] = kl_normcdf
+        elif link == "logit":
+            kl_sigmoid = StatMeter()
+            stats["kl_sigmoid"] = kl_sigmoid
+            kl_sigmoid_product = StatMeter()
+            stats["kl_sigmoid_product"] = kl_sigmoid_product
+
         if args.predictive != "softmax":
             norm_factors = StatMeter()
             stats["norm_factors"] = norm_factors
 
     if not isinstance(model, EDLWrapper | PostNetWrapper):
-        for i in [10, 100, 1000]:
+        for i in [10, 100, 1000, 10000]:
             log_bmas = torch.zeros(
                 num_samples, model.num_classes, device=storage_device
             )
@@ -1397,7 +1423,7 @@ def handle_bma(log_bma, converted_inference_res, prefix):
     )
 
 
-def convert_inference_res(inference_res, time_forward, args):
+def convert_inference_res(inference_res, time_forward, args):  # noqa: C901
     converted_inference_res = {}
 
     converted_inference_res["time_forward"] = time_forward
@@ -1463,7 +1489,7 @@ def convert_inference_res(inference_res, time_forward, args):
             )
 
             if suffix.endswith("mc"):
-                for i in [10, 100, 1000]:
+                for i in [10, 100, 1000, 10000]:
                     mc_predictive_fn = get_predictive(
                         predictive_name, args.use_correction, i, args.approximate
                     )
@@ -1490,6 +1516,49 @@ def convert_inference_res(inference_res, time_forward, args):
             )
             alpha = dirichlet_fn(mean, var)
             handle_alpha(alpha, converted_inference_res, suffix)
+
+        gt_log_bmas = converted_inference_res["mc_10000_log_bmas"]  # [B, C]
+        mc_10_log_bmas = converted_inference_res["mc_10_log_bmas"]  # [B, C]
+        mc_100_log_bmas = converted_inference_res["mc_100_log_bmas"]  # [B, C]
+        mc_1000_log_bmas = converted_inference_res["mc_1000_log_bmas"]  # [B, C]
+
+        kl_mc_10 = kl_divergence(gt_log_bmas, mc_10_log_bmas)  # [B]
+        converted_inference_res["kl_mc_10"] = kl_mc_10
+        kl_mc_100 = kl_divergence(gt_log_bmas, mc_100_log_bmas)  # [B]
+        converted_inference_res["kl_mc_100"] = kl_mc_100
+        kl_mc_1000 = kl_divergence(gt_log_bmas, mc_1000_log_bmas)  # [B]
+        converted_inference_res["kl_mc_1000"] = kl_mc_1000
+
+        if link == "log":
+            link_log_bmas = converted_inference_res["link_log_bmas"]  # [B, C]
+
+            kl_exp = kl_divergence(gt_log_bmas, link_log_bmas)
+            converted_inference_res["kl_exp"] = kl_exp
+        elif link == "softmax":
+            laplace_bridge_log_bmas = converted_inference_res["laplace_bridge_log_bmas"]
+            mean_field_log_bmas = converted_inference_res["mean_field_log_bmas"]
+
+            kl_laplace_bridge = kl_divergence(gt_log_bmas, laplace_bridge_log_bmas)
+            converted_inference_res["kl_laplace_bridge"] = kl_laplace_bridge
+            kl_mean_field = kl_divergence(gt_log_bmas, mean_field_log_bmas)
+            converted_inference_res["kl_mean_field"] = kl_mean_field
+        elif link == "probit":
+            link_normcdf_output_log_bmas = converted_inference_res[
+                "link_normcdf_output_log_bmas"
+            ]
+
+            kl_normcdf = kl_divergence(gt_log_bmas, link_normcdf_output_log_bmas)
+            converted_inference_res["kl_normcdf"] = kl_normcdf
+        elif link == "logit":
+            link_sigmoid_output = converted_inference_res["link_sigmoid_output"]
+            link_sigmoid_product_output = converted_inference_res[
+                "link_sigmoid_product_output"
+            ]
+
+            kl_sigmoid = kl_divergence(gt_log_bmas, link_sigmoid_output)
+            converted_inference_res["kl_sigmoid"] = kl_sigmoid
+            kl_sigmoid_product = kl_divergence(gt_log_bmas, link_sigmoid_product_output)
+            converted_inference_res["kl_sigmoid_product"] = kl_sigmoid_product
 
     elif len(inference_res) == 1 and inference_res[0].ndim == 3:
         samples = inference_res[0]
@@ -1533,6 +1602,15 @@ def update_logit_based(
             "sum_var_qc",
             "l2_dist",
             "abs_dist",
+            "kl_mc_10",
+            "kl_mc_100",
+            "kl_mc_1000",
+            "kl_exp",
+            "kl_laplace_bridge",
+            "kl_mean_field",
+            "kl_normcdf",
+            "kl_sigmoid",
+            "kl_sigmoid_product",
         }:
             stats[key].update(inference_res[key])
         elif key.endswith("log_bmas"):
