@@ -1059,8 +1059,8 @@ def validate(
 def update_post_hoc_method(model, train_loader, hard_id_eval_loader, args):
     if isinstance(
         model,
-        CovariancePushforwardLLLaplaceWrapper,
-        FullCovariancePushforwardLLLaplaceWrapper,
+        CovariancePushforwardLLLaplaceWrapper
+        | FullCovariancePushforwardLLLaplaceWrapper,
     ):
         if hard_id_eval_loader is None:
             msg = "For Laplace approximation, the ID eval loader has to be specified."
