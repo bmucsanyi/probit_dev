@@ -1191,7 +1191,7 @@ def get_bundle(  # noqa: C901
         vars_ = StatMeter()
         stats["vars"] = vars_
 
-        if args.method_name == "laplace_full":
+        if args.method_name == "laplace-full":
             var_sum_qc = StatMeter()
             var_1_per_sum_qc = StatMeter()
             sum_var_qc = StatMeter()
