@@ -19,6 +19,10 @@ class RegularizedSigmoidNLLLoss(nn.Module):
         log_probs = log_sigmoids - torch.logsumexp(log_sigmoids, dim=1).unsqueeze(1)
 
         loss = self._loss(log_probs, targets)
+
+        if self._regularization_factor == 0:
+            return loss
+
         regularizer = (
             logits.sigmoid()
             .sum(dim=-1)
