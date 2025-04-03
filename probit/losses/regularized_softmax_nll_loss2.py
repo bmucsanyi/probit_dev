@@ -14,6 +14,6 @@ class RegularizedSoftmaxNLLLoss2(nn.Module):
 
     def forward(self, logits, targets):
         loss = self._loss(logits, targets)
-        regularizer = torch.logsumexp(logits, dim=-1).square()
+        regularizer = torch.logsumexp(logits, dim=-1).square().mean()
 
         return loss + self._regularization_factor * regularizer
