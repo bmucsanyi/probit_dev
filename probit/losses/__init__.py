@@ -6,6 +6,7 @@ from .regularized_bma_cross_entropy_loss import RegularizedBMACrossEntropyLoss
 from .regularized_predictive_nll_loss import RegularizedPredictiveNLLLoss
 from .regularized_sigmoid_nll_loss import RegularizedSigmoidNLLLoss
 from .regularized_softmax_nll_loss import RegularizedSoftmaxNLLLoss
+from .regularized_softmax_nll_loss2 import RegularizedSoftmaxNLLLoss2
 from .regularized_uce_loss import RegularizedUCELoss
 from .sigmoid_nll_loss import SigmoidNLLLoss
 from .softmax_predictive_nll_loss import SoftmaxPredictiveNLLLoss
@@ -20,6 +21,7 @@ __all__ = [
     "RegularizedPredictiveNLLLoss",
     "RegularizedSigmoidNLLLoss",
     "RegularizedSoftmaxNLLLoss",
+    "RegularizedSoftmaxNLLLoss2",
     "RegularizedUCELoss",
     "SigmoidNLLLoss",
     "SoftmaxPredictiveNLLLoss",
