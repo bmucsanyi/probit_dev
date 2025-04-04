@@ -125,25 +125,7 @@ def log_link(
     )
 
 
-def log_link_mc(
-    mean: torch.Tensor,
-    var: torch.Tensor,
-    num_mc_samples: int,
-    *,
-    return_samples: bool = False,
-) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor]:
-    logit_samples = torch.randn(
-        mean.shape[0],
-        num_mc_samples,
-        mean.shape[1],
-        dtype=mean.dtype,
-        device=mean.device,
-    ) * var.sqrt().unsqueeze(1) + mean.unsqueeze(1)  # [B, S, C]
-    prob = F.softmax(logit_samples, dim=-1)
-
-    prob_mean = prob.mean(dim=1)
-
-    return (prob_mean, logit_samples) if return_samples else prob_mean
+log_link_mc = softmax_mc
 
 
 def logit_link_sigmoid_output_dirichlet(

@@ -1190,6 +1190,14 @@ def get_bundle(  # noqa: C901
     if is_distributional:
         vars_ = StatMeter()
         stats["vars"] = vars_
+        var_means = StatMeter()
+        stats["var_means"] = var_means
+        var_stds = StatMeter()
+        stats["var_stds"] = var_stds
+        logit_means = StatMeter()
+        stats["logit_means"] = logit_means
+        logit_stds = StatMeter()
+        stats["logit_stds"] = logit_stds
 
         if args.method_name == "laplace-full":
             var_sum_qc = StatMeter()
@@ -1458,7 +1466,13 @@ def convert_inference_res(inference_res, time_forward, args):  # noqa: C901
             converted_inference_res["abs_dist"] = abs_dist
 
         converted_inference_res["vars"] = var.flatten()
+        converted_inference_res["var_means"] = var.mean(dim=-1)
+        converted_inference_res["var_stds"] = var.std(dim=-1)
+        converted_inference_res["logit_means"] = mean.mean(dim=-1)
+        converted_inference_res["logit_stds"] = mean.std(dim=-1)
 
+        # TODO(bmucsanyi): This is wrong, it only applies e.g. softmax
+        # and not the predictive (like scaling of logits with mean field).
         if "softmax" not in args.predictive:
             act_fn = get_activation(
                 args.predictive, args.approximate, unnormalized=True
@@ -1598,6 +1612,10 @@ def update_logit_based(
         if key in {
             "time_forward",
             "vars",
+            "var_means",
+            "var_stds",
+            "logit_means",
+            "logit_stds",
             "norm_factors",
             "var_sum_qc",
             "var_1_per_sum_qc",
