@@ -389,6 +389,8 @@ def evaluate_on_correctness_prediction(
         prefixes.append("link")
     if "laplace_bridge_entropies_of_bma" in estimates:
         prefixes.append("laplace_bridge")
+    if "moment_match_entropies_of_bma" in estimates:
+        prefixes.append("moment_match")
     if "mean_field_entropies_of_bma" in estimates:
         prefixes.append("mean_field")
     if "edl_dirichlet_entropies_of_bma" in estimates:
@@ -477,6 +479,8 @@ def evaluate_on_abstained_prediction(
         prefixes.append("link")
     if "laplace_bridge_entropies_of_bma" in estimates:
         prefixes.append("laplace_bridge")
+    if "moment_match_entropies_of_bma" in estimates:
+        prefixes.append("moment_match")
     if "mean_field_entropies_of_bma" in estimates:
         prefixes.append("mean_field")
     if "edl_dirichlet_entropies_of_bma" in estimates:
@@ -649,6 +653,8 @@ def evaluate_on_proper_scoring_and_calibration(
         prefixes.append("link")
     if "laplace_bridge_entropies_of_bma" in estimates:
         prefixes.append("laplace_bridge")
+    if "moment_match_entropies_of_bma" in estimates:
+        prefixes.append("moment_match")
     if "mean_field_entropies_of_bma" in estimates:
         prefixes.append("mean_field")
     if "edl_dirichlet_entropies_of_bma" in estimates:
@@ -817,6 +823,8 @@ def evaluate_on_correlation_of_decomposition(
         prefixes.append("link")
     if "laplace_bridge_entropies_of_bma" in estimates:
         prefixes.append("laplace_bridge")
+    if "moment_match_entropies_of_bma" in estimates:
+        prefixes.append("moment_match")
     if "mean_field_entropies_of_bma" in estimates:
         prefixes.append("mean_field")
     if "edl_dirichlet_entropies_of_bma" in estimates:
@@ -1053,6 +1061,8 @@ def calc_correctnesses(estimates, log_probs, targets, is_soft):
         prefixes.append("link")
     if "laplace_bridge_entropies_of_bma" in estimates:
         prefixes.append("laplace_bridge")
+    if "moment_match_entropies_of_bma" in estimates:
+        prefixes.append("moment_match")
     if "mean_field_entropies_of_bma" in estimates:
         prefixes.append("mean_field")
     if "edl_dirichlet_entropies_of_bma" in estimates:
@@ -1235,7 +1245,7 @@ def get_bundle(  # noqa: C901
         if link == "log":
             suffixes = ["link", "link_mc"]
         elif link == "softmax":
-            suffixes = ["laplace_bridge", "mean_field", "mc"]
+            suffixes = ["laplace_bridge", "mean_field", "moment_match", "mc"]
         elif link == "probit":
             suffixes = ["link_normcdf_output", "link_mc"]
         elif link == "logit":
@@ -1250,11 +1260,11 @@ def get_bundle(  # noqa: C901
                 num_samples, model.num_classes, device=storage_device
             )
             log_probs[f"{suffix}_log_bmas"] = log_bmas
-            entropies_of_bma = torch.empty(num_samples, device=storage_device)
-            estimates[f"{suffix}_expected_entropies"] = expected_entropies
-            one_minus_max_probs_of_bma = torch.empty(num_samples, device=storage_device)
-            estimates[f"{suffix}_entropies_of_bma"] = entropies_of_bma
             expected_entropies = torch.empty(num_samples, device=storage_device)
+            estimates[f"{suffix}_expected_entropies"] = expected_entropies
+            entropies_of_bma = torch.empty(num_samples, device=storage_device)
+            estimates[f"{suffix}_entropies_of_bma"] = entropies_of_bma
+            one_minus_max_probs_of_bma = torch.empty(num_samples, device=storage_device)
             estimates[f"{suffix}_one_minus_max_probs_of_bma"] = (
                 one_minus_max_probs_of_bma
             )
@@ -1400,7 +1410,7 @@ def convert_inference_res(inference_res, time_forward, args):
         if link == "log":
             suffixes = ["link", "link_mc"]
         if link == "softmax":
-            suffixes = ["laplace_bridge", "mean_field", "mc"]
+            suffixes = ["laplace_bridge", "mean_field", "moment_match", "mc"]
         elif link == "probit":
             suffixes = ["link_normcdf_output", "link_mc"]
         elif link == "logit":

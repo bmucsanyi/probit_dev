@@ -57,6 +57,61 @@ def softmax_mc(
     return (prob_mean, logit_samples) if return_samples else prob_mean
 
 
+def softmax_moment_match(
+    mean: torch.Tensor,
+    var: torch.Tensor,
+    *,
+    return_logits: bool = False,
+) -> torch.Tensor:
+    """Linear-time analytic predictive for Gaussian logits.
+
+    This is the closed-form approximation to
+    ``E[softmax(X)]`` where each logit ``X_k`` is modelled as an
+    independent Gaussian ``N(mean_k, var_k)`` (see Eq. 17 in
+    *Feed-forward Propagation in Probabilistic Neural Networks*).
+
+    Args:
+        mean: Tensor of shape ``(..., C)`` holding the per-class means.
+        var:  Tensor of shape ``(..., C)`` with the corresponding variances.
+              All entries must be non-negative and broadcast-compatible
+              with ``mean``.
+        return_logits: If ``True``, return log-probabilities
+              (``log(pred)``) instead of probabilities.
+
+    Returns:
+        Tensor with the same shape as ``mean`` containing the predictive
+        class probabilities (or their logarithm when
+        ``return_logits=True``).
+
+    Raises:
+        ValueError: If *any* variance entry is negative.
+    """
+    if torch.any(var < 0):
+        msg = "All variance entries must be non-negative."
+        raise ValueError(msg)
+
+    logistic_var = math.pi**2 / 3
+    tau2 = var + logistic_var  # augmented variances
+
+    sigma_a2, _ = tau2.min(dim=-1, keepdim=True)  # per-sample minimum
+    s = torch.sqrt(2.0 * sigma_a2 / logistic_var)
+    sy = torch.sqrt((tau2 + sigma_a2) / logistic_var)
+
+    # Shift for numerical stability (softmax trick)
+    mean_shifted = mean - mean.max(dim=-1, keepdim=True).values
+
+    exp_mu_over_s = torch.exp(mean_shifted / s)
+    denom_common = exp_mu_over_s.sum(dim=-1, keepdim=True)
+
+    num = torch.exp(mean_shifted / sy)
+    den = num + (denom_common - exp_mu_over_s) ** (s / sy)
+    pred = num / den  # probabilities
+
+    if return_logits:
+        return torch.log(pred + 1e-10)  # log-probabilities
+    return pred
+
+
 def logit_link_sigmoid_output(
     mean: torch.Tensor, var: torch.Tensor, *, return_logits: bool = False
 ) -> torch.Tensor:
@@ -498,6 +553,7 @@ PREDICTIVE_DICT = {
     "softmax_laplace_bridge": softmax_laplace_bridge,
     "softmax_mean_field": softmax_mean_field,
     "softmax_mc": softmax_mc,
+    "softmax_moment_match": softmax_moment_match,
     "logit_link_sigmoid_output": logit_link_sigmoid_output,
     "logit_link_sigmoid_product_output": logit_link_sigmoid_output,
     "logit_link_mc": logit_link_mc,
