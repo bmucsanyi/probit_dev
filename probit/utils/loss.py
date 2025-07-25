@@ -90,7 +90,9 @@ def create_loss_fn(args, num_batches):
         )
     elif args.loss == "unnormalized-predictive-nll":
         train_loss_fn = UnnormalizedPredictiveNLLLoss(
-            predictive=args.predictive, approximate=args.approximate
+            predictive=args.predictive, 
+            approximate=args.approximate,
+            num_mc_samples=args.num_mc_samples
         )
     else:
         msg = f"--loss {args.loss} is not implemented"
