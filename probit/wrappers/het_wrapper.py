@@ -80,10 +80,16 @@ class HETHead(nn.Module):
             return (logits / self._temperature,)
 
         if R > 0:
-            vars = low_rank_cov.square().sum(dim=-1) + diagonal_var  # [B, C]
-        else:
-            vars = diagonal_var
+            # Compute full covariance matrix: Cov = L @ L^T + D
+            # where L is low_rank_cov [B, C, R] and D is diagonal_var [B, C]
+            cov = torch.bmm(low_rank_cov, low_rank_cov.transpose(1, 2))  # [B, C, C]
+            # Add diagonal variance
+            cov = cov + torch.diag_embed(diagonal_var)  # [B, C, C]
+            return self._classifier(
+                features
+            ) / self._temperature, cov / self._temperature**2
 
+        vars = diagonal_var
         return self._classifier(
             features
         ) / self._temperature, vars / self._temperature**2
