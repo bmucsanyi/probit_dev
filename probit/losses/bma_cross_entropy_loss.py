@@ -10,21 +10,17 @@ from probit.utils.predictive import get_predictive
 class BMACrossEntropyLoss(nn.Module):
     """Implements Cross-entropy loss combined with Bayesian Model Averaging."""
 
-    def __init__(self, predictive, use_correction, num_mc_samples):
+    def __init__(self, predictive, use_correction, num_mc_samples, approximate=False):
         super().__init__()
 
-        if not predictive.startswith("softmax"):
-            msg = "Invalid predictive provided"
-            raise ValueError(msg)
-
         self.predictive_str = predictive
+        self.predictive = get_predictive(
+            predictive, use_correction, num_mc_samples, approximate
+        )
 
         if predictive.endswith("mc"):
             self.loss = nn.NLLLoss()
         else:
-            self.predictive = get_predictive(
-                predictive, use_correction, num_mc_samples, approximate=False
-            )
             self.loss = nn.CrossEntropyLoss()
 
         self.eps = 1e-10
@@ -35,20 +31,15 @@ class BMACrossEntropyLoss(nn.Module):
             mean, var = logits
 
             if self.predictive_str.endswith("mc"):
-                logits = (
-                    var.sqrt()
-                    * torch.randn(
-                        var.shape[0],
-                        self.num_mc_samples,
-                        var.shape[1],
-                        device=var.device,
-                    )
-                    + mean
-                )
+                # Use the predictive function which handles full covariance properly
+                probs = self.predictive(mean, var)  # [B, C]
+                log_probs = probs.add(self.eps).log()
+                return self.loss(log_probs, targets)
             else:
                 logits = self.predictive(mean, var, return_logits=True)
                 return self.loss(logits, targets)
 
+        # For models that return samples directly (e.g., deep ensembles)
         logits = logits[0]
         log_probs = F.softmax(logits, dim=-1).mean(dim=1).add(self.eps).log()  # [B, C]
         return self.loss(log_probs, targets)
