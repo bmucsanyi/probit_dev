@@ -14,7 +14,6 @@ from probit.losses import (
     RegularizedSoftmaxNLLLoss2,
     RegularizedUCELoss,
     SigmoidNLLLoss,
-    SoftmaxPredictiveNLLLoss,
     UnnormalizedPredictiveNLLLoss,
 )
 from probit.losses.normed_ndtr_loss import NormedNdtrNLLLoss
@@ -93,8 +92,6 @@ def create_loss_fn(args, num_batches):
         train_loss_fn = UnnormalizedPredictiveNLLLoss(
             predictive=args.predictive, approximate=args.approximate
         )
-    elif args.loss == "softmax-predictive-nll":
-        train_loss_fn = SoftmaxPredictiveNLLLoss(predictive=args.predictive)
     else:
         msg = f"--loss {args.loss} is not implemented"
         raise NotImplementedError(msg)

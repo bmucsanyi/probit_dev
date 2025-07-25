@@ -9,7 +9,6 @@ from .regularized_softmax_nll_loss import RegularizedSoftmaxNLLLoss
 from .regularized_softmax_nll_loss2 import RegularizedSoftmaxNLLLoss2
 from .regularized_uce_loss import RegularizedUCELoss
 from .sigmoid_nll_loss import SigmoidNLLLoss
-from .softmax_predictive_nll_loss import SoftmaxPredictiveNLLLoss
 from .unnormalized_predictive_nll_loss import UnnormalizedPredictiveNLLLoss
 
 __all__ = [
@@ -24,6 +23,5 @@ __all__ = [
     "RegularizedSoftmaxNLLLoss2",
     "RegularizedUCELoss",
     "SigmoidNLLLoss",
-    "SoftmaxPredictiveNLLLoss",
     "UnnormalizedPredictiveNLLLoss",
 ]
