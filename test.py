@@ -1197,7 +1197,9 @@ def get_bundle(  # noqa: C901
         logit_stds = StatMeter()
         stats["logit_stds"] = logit_stds
 
-        if args.method_name == "laplace-full":
+        if args.method_name == "laplace-full" or (
+            args.method_name == "het" and args.matrix_rank > 0
+        ):
             var_sum_qc = StatMeter()
             var_1_per_sum_qc = StatMeter()
             sum_var_qc = StatMeter()
@@ -1437,10 +1439,7 @@ def convert_inference_res(inference_res, time_forward, args):  # noqa: C901
     if len(inference_res) == 2:  # is_distributional
         mean, var = inference_res
 
-        is_het_with_rank = (
-            args.method_name == "het"
-            and args.matrix_rank > 0
-        )
+        is_het_with_rank = args.method_name == "het" and args.matrix_rank > 0
 
         if args.method_name == "laplace-full" or is_het_with_rank:
             act_fn = get_activation(
@@ -1520,9 +1519,9 @@ def convert_inference_res(inference_res, time_forward, args):  # noqa: C901
                     unnormalized_act_fn = get_activation(
                         predictive_name, args.approximate, unnormalized=True
                     )
-                    converted_inference_res["norm_factors"] = (
-                        unnormalized_act_fn(logit).sum(dim=-1)
-                    )
+                    converted_inference_res["norm_factors"] = unnormalized_act_fn(
+                        logit
+                    ).sum(dim=-1)
 
         for suffix in suffixes:
             if suffix.endswith("mc") or (

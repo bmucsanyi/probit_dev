@@ -67,7 +67,9 @@ def sample_from_gaussian(
         )  # [B, S, C]
 
         # Transform samples: x = mean + L @ z
-        samples = mean.unsqueeze(1) + torch.matmul(L.unsqueeze(1), z.unsqueeze(-1)).squeeze(-1)
+        samples = mean.unsqueeze(1) + torch.matmul(
+            L.unsqueeze(1), z.unsqueeze(-1)
+        ).squeeze(-1)
     else:
         # var is diagonal variances [B, C]
         samples = torch.randn(

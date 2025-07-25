@@ -511,9 +511,7 @@ def main():
                 args=args,
             )
 
-            logger.info(
-                f"Best eval metric: {best_eval_metric} (epoch {best_epoch})."
-            )
+            logger.info(f"Best eval metric: {best_eval_metric} (epoch {best_epoch}).")
 
         if args.evaluate_on_test_sets:
             test(
