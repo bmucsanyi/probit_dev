@@ -235,7 +235,7 @@ class SlurmJob:
         self._log_path.mkdir(parents=True, exist_ok=True)
 
         bash_file_path = Path(f"{self._job_name}.sh")
-        with bash_file_path.open("w") as f:
+        with bash_file_path.open("w", encoding="utf-8") as f:
             f.write(self._create_bash_str())
         bash_file_path.chmod(0o700)
 
