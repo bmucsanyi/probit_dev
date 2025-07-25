@@ -102,7 +102,7 @@ class SoftImageNet(ImageNet):
         # Questions were only asked about 24889 images, and of those 1067 have no single
         # yes vote at any label. We will fill up (some of) the missing ones by taking
         # the ImageNet Real Labels
-        with path_real_labels.open() as f:
+        with path_real_labels.open(encoding="utf-8") as f:
             real_labels = json.load(f)
 
         for index, label in enumerate(real_labels):

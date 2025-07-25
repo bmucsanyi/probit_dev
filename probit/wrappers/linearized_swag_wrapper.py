@@ -32,7 +32,7 @@ class LinearizedSWAGWrapper(DistributionalWrapper):
         self.model.apply(self._add_swag_params)
 
     def to(self, *args, **kwargs):
-        device, dtype, non_blocking, convert_to_format = torch._C._nn._parse_to(  # noqa: SLF001
+        device, dtype, non_blocking, convert_to_format = torch._C._nn._parse_to(
             *args, **kwargs
         )
 

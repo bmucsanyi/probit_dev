@@ -127,7 +127,7 @@ class SoftDataset(data.Dataset):
         Args:
             path: Path to the JSON file containing annotations.
         """
-        with path.open() as f:
+        with path.open(encoding="utf-8") as f:
             raw = json.load(f)
 
             # Collect all annotations

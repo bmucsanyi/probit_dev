@@ -55,8 +55,8 @@ class RandomResizedCropAndInterpolation:
             log_ratio = (math.log(ratio[0]), math.log(ratio[1]))
             aspect_ratio = math.exp(random.uniform(*log_ratio))
 
-            w = int(round(math.sqrt(target_area * aspect_ratio)))
-            h = int(round(math.sqrt(target_area / aspect_ratio)))
+            w = round(math.sqrt(target_area * aspect_ratio))
+            h = round(math.sqrt(target_area / aspect_ratio))
 
             if w <= img.size[0] and h <= img.size[1]:
                 i = random.randint(0, img.size[1] - h)
@@ -67,10 +67,10 @@ class RandomResizedCropAndInterpolation:
         in_ratio = img.size[0] / img.size[1]
         if in_ratio < min(ratio):
             w = img.size[0]
-            h = int(round(w / min(ratio)))
+            h = round(w / min(ratio))
         elif in_ratio > max(ratio):
             h = img.size[1]
-            w = int(round(h * max(ratio)))
+            w = round(h * max(ratio))
         else:  # whole image
             w = img.size[0]
             h = img.size[1]

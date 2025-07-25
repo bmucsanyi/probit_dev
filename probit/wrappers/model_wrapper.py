@@ -13,13 +13,13 @@ class ModelWrapper(nn.Module):
 
     def __getattr__(self, name: str):
         if "_parameters" in self.__dict__:
-            _parameters = self.__dict__["_parameters"]
-            if name in _parameters:
-                return _parameters[name]
+            parameters = self.__dict__["_parameters"]
+            if name in parameters:
+                return parameters[name]
         if "_buffers" in self.__dict__:
-            _buffers = self.__dict__["_buffers"]
-            if name in _buffers:
-                return _buffers[name]
+            buffers = self.__dict__["_buffers"]
+            if name in buffers:
+                return buffers[name]
         if "_modules" in self.__dict__:
             modules = self.__dict__["_modules"]
             if name in modules:
