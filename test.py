@@ -1439,7 +1439,12 @@ def convert_inference_res(inference_res, time_forward, args):  # noqa: C901
     if len(inference_res) == 2:  # is_distributional
         mean, var = inference_res
 
-        if args.method_name == "laplace-full":
+        is_het_with_rank = (
+            args.method_name == "het"
+            and args.matrix_rank > 0
+        )
+
+        if args.method_name == "laplace-full" or is_het_with_rank:
             act_fn = get_activation(
                 args.predictive, args.approximate, unnormalized=True
             )
