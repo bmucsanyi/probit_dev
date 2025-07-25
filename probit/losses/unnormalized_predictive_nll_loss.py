@@ -13,16 +13,17 @@ from probit.utils.predictive import PREDICTIVE_DICT
 class UnnormalizedPredictiveNLLLoss(nn.Module):
     """Unnormalized predictive NLL loss."""
 
-    def __init__(self, predictive, approximate):
+    def __init__(self, predictive, approximate, num_mc_samples=100):
         super().__init__()
 
-        if not predictive.startswith(("probit", "logit", "log")) or predictive.endswith(
-            "mc"
-        ):
+        if not predictive.startswith(("probit", "logit", "log")):
             msg = "Invalid predictive provided"
             raise ValueError(msg)
 
         self._predictive = PREDICTIVE_DICT[predictive]
+
+        if predictive.endswith("mc"):
+            self._predictive = partial(self._predictive, num_mc_samples=num_mc_samples)
 
         if predictive.startswith("probit"):
             self._predictive = partial(self._predictive, approximate=approximate)

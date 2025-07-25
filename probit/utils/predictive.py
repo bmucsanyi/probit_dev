@@ -8,7 +8,7 @@ import torch.nn.functional as F
 from numpy import sqrt
 from scipy.special import owens_t
 from torch.distributions import Normal
-from torch.special import log_ndtr, ndtr
+from torch.special import log_ndtr, ndtr, ndtri
 
 from probit.utils.ndtr import log_ndtr_approx, ndtr_approx
 
@@ -114,11 +114,16 @@ def logit_link_mc(
     num_mc_samples: int,
     *,
     return_samples: bool = False,
+    return_logits: bool = False,
 ) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor]:
     logit_samples = sample_from_gaussian(mean, var, num_mc_samples)
     prob = F.sigmoid(logit_samples)
-    prob = prob / prob.sum(dim=-1, keepdim=True)
 
+    if return_logits:
+        # Return logits that when passed through sigmoid give prob.mean
+        return torch.logit(prob.mean(dim=1))
+
+    prob = prob / prob.sum(dim=-1, keepdim=True)
     prob_mean = prob.mean(dim=1)
 
     return (prob_mean, logit_samples) if return_samples else prob_mean
@@ -157,7 +162,23 @@ def log_link(
     )
 
 
-log_link_mc = softmax_mc
+def log_link_mc(
+    mean: torch.Tensor,
+    var: torch.Tensor,
+    num_mc_samples: int,
+    *,
+    return_samples: bool = False,
+    return_logits: bool = False,
+) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor]:
+    logit_samples = sample_from_gaussian(mean, var, num_mc_samples)
+
+    if return_logits:
+        # Return logits that when passed through exp give exp_values.mean
+        return logit_samples.exp().mean(dim=1).log()
+
+    prob_mean = logit_samples.softmax(dim=-1).mean(dim=1)
+
+    return (prob_mean, logit_samples) if return_samples else prob_mean
 
 
 def logit_link_sigmoid_output_dirichlet(
@@ -229,13 +250,18 @@ def probit_link_mc(
     *,
     approximate: bool,
     return_samples: bool = False,
+    return_logits: bool = False,
 ) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor]:
     logit_samples = sample_from_gaussian(mean, var, num_mc_samples)
 
     ndtr_fn = ndtr_approx if approximate else ndtr
     prob = ndtr_fn(logit_samples.double()).float()
-    prob = prob / prob.sum(dim=-1, keepdim=True)
 
+    if return_logits:
+        # Return logits that when passed through ndtr give prob.mean
+        return ndtri(prob.mean(dim=1))
+
+    prob = prob / prob.sum(dim=-1, keepdim=True)
     prob_mean = prob.mean(dim=1)
 
     return (prob_mean, logit_samples) if return_samples else prob_mean
