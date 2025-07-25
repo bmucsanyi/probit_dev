@@ -45,10 +45,8 @@ from probit.utils import (
 from probit.wrappers import (
     CovariancePushforwardLLLaplaceWrapper,
     FullCovariancePushforwardLLLaplaceWrapper,
-    LinearizedSWAGWrapper,
     PostNetWrapper,
     SNGPWrapper,
-    SWAGWrapper,
 )
 from test import evaluate, evaluate_bulk
 
@@ -253,43 +251,38 @@ def train(
                 logger.info("Distributing batch norm statistics.")
             distribute_bn(model, args.world_size)
 
-        if not isinstance(model, SWAGWrapper | LinearizedSWAGWrapper):
-            eval_metrics = validate(
-                model=model,
-                loader=id_eval_loader,
-                args=args,
-                device=device,
-                amp_autocast=amp_autocast,
+        eval_metrics = validate(
+            model=model,
+            loader=id_eval_loader,
+            args=args,
+            device=device,
+            amp_autocast=amp_autocast,
+        )
+        logger.info(f"{eval_metric}: {eval_metrics[eval_metric]}")
+
+        is_new_best = (
+            epoch >= args.best_save_start_epoch
+            and eval_metrics[eval_metric] < best_eval_metric
+        )
+
+        if is_new_best:
+            best_eval_metric = eval_metrics[eval_metric]
+            best_eval_metrics = eval_metrics
+            best_epoch = epoch
+
+        if args.rank == 0 and args.log_wandb:
+            log_wandb(
+                epoch=epoch,
+                train_metrics=train_metrics,
+                eval_metrics=eval_metrics,
+                best_eval_metrics=best_eval_metrics,
+                optimizer=optimizer,
             )
-            logger.info(f"{eval_metric}: {eval_metrics[eval_metric]}")
 
-            is_new_best = (
-                epoch >= args.best_save_start_epoch
-                and eval_metrics[eval_metric] < best_eval_metric
-            )
-
-            if is_new_best:
-                best_eval_metric = eval_metrics[eval_metric]
-                best_eval_metrics = eval_metrics
-                best_epoch = epoch
-
-            if args.rank == 0 and args.log_wandb:
-                log_wandb(
-                    epoch=epoch,
-                    train_metrics=train_metrics,
-                    eval_metrics=eval_metrics,
-                    best_eval_metrics=best_eval_metrics,
-                    optimizer=optimizer,
-                )
-
-            if args.rank == 0 and epoch >= args.best_save_start_epoch:
-                # Save proper checkpoint with eval metric
-                metric = eval_metrics[eval_metric]
-                saver.save_checkpoint(epoch=epoch, metric=metric)
-        else:
-            # Add placeholder value for [Linearized]SWAGWrapper: this method does not
-            # support plateau-based LR scheduling
-            eval_metrics = {"val_top_1_accuracy": 1.0, "val_loss": 0.0}
+        if args.rank == 0 and epoch >= args.best_save_start_epoch:
+            # Save proper checkpoint with eval metric
+            metric = eval_metrics[eval_metric]
+            saver.save_checkpoint(epoch=epoch, metric=metric)
 
         if lr_scheduler is not None:
             # Step LR for next epoch
@@ -326,7 +319,7 @@ def test(
 ):
     logger.info("Starting final tests.")
 
-    if num_epochs > 0 and not isinstance(model, SWAGWrapper | LinearizedSWAGWrapper):
+    if num_epochs > 0:
         # No post-hoc method, load best checkpoint first
         load_best_checkpoint(saver, model)
 
@@ -520,10 +513,9 @@ def main():
                 args=args,
             )
 
-            if not isinstance(model, SWAGWrapper | LinearizedSWAGWrapper):
-                logger.info(
-                    f"Best eval metric: {best_eval_metric} (epoch {best_epoch})."
-                )
+            logger.info(
+                f"Best eval metric: {best_eval_metric} (epoch {best_epoch})."
+            )
 
         if args.evaluate_on_test_sets:
             test(
@@ -857,13 +849,6 @@ def train_one_epoch(
     if isinstance(model, SNGPWrapper) and args.gp_cov_momentum < 0:
         model.reset_covariance_matrix()
 
-    if isinstance(model, SWAGWrapper | LinearizedSWAGWrapper):
-        checkpoint_batches = model.calculate_checkpoint_batches(
-            num_batches=num_batches,
-            num_checkpoints_per_epoch=args.num_checkpoints_per_epoch,
-            accumulation_steps=accumulation_steps,
-        )
-
     for batch_idx, (input, target) in enumerate(loader):
         last_batch = batch_idx == last_batch_idx
         need_update = last_batch or (batch_idx + 1) % accumulation_steps == 0
@@ -910,12 +895,6 @@ def train_one_epoch(
         time_now = time.perf_counter()
         update_time_m.update(time.perf_counter() - update_start_time)
         update_start_time = time_now
-
-        if (
-            isinstance(model, SWAGWrapper | LinearizedSWAGWrapper)
-            and batch_idx in checkpoint_batches
-        ):
-            model.update_stats()
 
         if update_idx % args.log_interval == 0:
             lrl = [param_group["lr"] for param_group in optimizer.param_groups]
@@ -1071,12 +1050,6 @@ def update_post_hoc_method(model, train_loader, hard_id_eval_loader, args):
             args.log_prior_prec_min,
             args.log_prior_prec_max,
             args.grid_size,
-        )
-    elif isinstance(model, SWAGWrapper):
-        model.get_mc_samples(
-            train_loader=train_loader,
-            num_mc_samples=args.num_mc_samples,
-            channels_last=args.channels_last,
         )
 
 

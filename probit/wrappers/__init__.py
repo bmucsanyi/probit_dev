@@ -7,10 +7,8 @@ __all__ = [
     "EDLWrapper",
     "FullCovariancePushforwardLLLaplaceWrapper",
     "HETWrapper",
-    "LinearizedSWAGWrapper",
     "PostNetWrapper",
     "SNGPWrapper",
-    "SWAGWrapper",
     "SamplePushforwardLaplaceWrapper",
 ]
 
@@ -28,8 +26,6 @@ from .full_covariance_pushforward_lllaplace_wrapper import (
     FullCovariancePushforwardLLLaplaceWrapper,
 )
 from .het_wrapper import HETWrapper
-from .linearized_swag_wrapper import LinearizedSWAGWrapper
 from .postnet_wrapper import PostNetWrapper
 from .sample_pushforward_laplace_wrapper import SamplePushforwardLaplaceWrapper
 from .sngp_wrapper import SNGPWrapper
-from .swag_wrapper import SWAGWrapper

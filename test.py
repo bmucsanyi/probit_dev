@@ -38,7 +38,6 @@ from probit.wrappers import (
     EDLWrapper,
     FullCovariancePushforwardLLLaplaceWrapper,
     HETWrapper,
-    LinearizedSWAGWrapper,
     PostNetWrapper,
     SNGPWrapper,
 )
@@ -1178,8 +1177,7 @@ def get_bundle(  # noqa: C901
         model,
         SNGPWrapper
         | CovariancePushforwardLLLaplaceWrapper
-        | FullCovariancePushforwardLLLaplaceWrapper
-        | LinearizedSWAGWrapper,
+        | FullCovariancePushforwardLLLaplaceWrapper,
     )
 
     # Estimate containers

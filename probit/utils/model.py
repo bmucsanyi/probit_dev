@@ -23,10 +23,8 @@ from probit.wrappers import (
     EDLWrapper,
     FullCovariancePushforwardLLLaplaceWrapper,
     HETWrapper,
-    LinearizedSWAGWrapper,
     PostNetWrapper,
     SNGPWrapper,
-    SWAGWrapper,
 )
 
 logger = logging.getLogger(__name__)
@@ -189,14 +187,6 @@ def wrap_model(
             ggn_scaler=ggn_scaler,
             weight_path=weight_paths[0],
         )
-    elif model_wrapper_name == "swag":
-        kwargs = {
-            "model": model,
-            "weight_path": weight_paths[0],
-            "use_low_rank_cov": use_low_rank_cov,
-            "max_rank": max_rank,
-        }
-        wrapped_model = LinearizedSWAGWrapper(**kwargs)
     elif model_wrapper_name == "edl":
         wrapped_model = EDLWrapper(model=model, activation=edl_activation)
     elif model_wrapper_name == "postnet":

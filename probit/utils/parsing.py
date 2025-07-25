@@ -208,32 +208,10 @@ group.add_argument(
     help="Last layer's name for LLLaplace",
 )
 group.add_argument(
-    "--use-sampling",
-    action="store_true",
-    help="Whether to sample instead of returning logit means and vars",
-)
-group.add_argument(
     "--temperature",
     type=float,
     default=1.5,
     help="Temperature in the HET method",
-)
-group.add_argument(
-    "--use-low-rank-cov",
-    action="store_true",
-    help="Whether to use the low rank covariance matrix factor in the SWAG method",
-)
-group.add_argument(
-    "--max-rank",
-    type=int,
-    default=20,
-    help="Maximum rank of the low rank covariance matrix factor in the SWAG method",
-)
-group.add_argument(
-    "--num-checkpoints-per-epoch",
-    type=int,
-    default=4,
-    help="Number of checkpoints per epoch in the SWAG method",
 )
 group.add_argument(
     "--use-spectral-normalization",
