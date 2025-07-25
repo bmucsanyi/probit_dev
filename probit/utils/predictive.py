@@ -125,8 +125,8 @@ def logit_link_mc(
         # Return logits that when passed through sigmoid give prob.mean
         # Clamp to avoid inf/-inf from logit
         prob_mean = prob.mean(dim=1)
-        # Use same clamping as in other parts of codebase
-        prob_mean = prob_mean.clamp(min=1e-10, max=1 - 1e-10)
+        # Clamp to avoid inf (1 - 1e-8 rounds to 1.0 in float32)
+        prob_mean = prob_mean.clamp(min=1e-7, max=1 - 1e-7)
         return torch.logit(prob_mean)
 
     prob = prob / prob.sum(dim=-1, keepdim=True)
@@ -266,8 +266,8 @@ def probit_link_mc(
     if return_logits:
         # Return logits that when passed through ndtr give prob.mean
         prob_mean = prob.mean(dim=1)
-        # Clamp to avoid extreme values from ndtri
-        prob_mean = prob_mean.clamp(min=1e-10, max=1 - 1e-10)
+        # Clamp to avoid inf (1 - 1e-8 rounds to 1.0 in float32)
+        prob_mean = prob_mean.clamp(min=1e-7, max=1 - 1e-7)
         return ndtri(prob_mean)
 
     prob = prob / prob.sum(dim=-1, keepdim=True)
