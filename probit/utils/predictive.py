@@ -37,6 +37,50 @@ def softmax_mean_field(
     return logits if return_logits else logits.softmax(dim=-1)
 
 
+def sample_from_gaussian(
+    mean: torch.Tensor,
+    var: torch.Tensor,
+    num_mc_samples: int,
+) -> torch.Tensor:
+    """Sample from Gaussian distribution with mean and variance/covariance.
+
+    Args:
+        mean: Mean tensor [B, C]
+        var: Either diagonal variances [B, C] or full covariance [B, C, C]
+        num_mc_samples: Number of Monte Carlo samples
+
+    Returns:
+        Samples [B, S, C] where S is num_mc_samples
+    """
+    if var.dim() == 3 and var.shape[1] == var.shape[2]:
+        # var is a covariance matrix [B, C, C]
+        # Perform Cholesky decomposition
+        L = torch.linalg.cholesky(var)  # [B, C, C]
+
+        # Sample standard normal
+        z = torch.randn(
+            mean.shape[0],
+            num_mc_samples,
+            mean.shape[1],
+            dtype=mean.dtype,
+            device=mean.device,
+        )  # [B, S, C]
+
+        # Transform samples: x = mean + L @ z
+        samples = mean.unsqueeze(1) + torch.matmul(L.unsqueeze(1), z.unsqueeze(-1)).squeeze(-1)
+    else:
+        # var is diagonal variances [B, C]
+        samples = torch.randn(
+            mean.shape[0],
+            num_mc_samples,
+            mean.shape[1],
+            dtype=mean.dtype,
+            device=mean.device,
+        ) * var.sqrt().unsqueeze(1) + mean.unsqueeze(1)
+
+    return samples
+
+
 def softmax_mc(
     mean: torch.Tensor,
     var: torch.Tensor,
@@ -44,13 +88,7 @@ def softmax_mc(
     *,
     return_samples: bool = False,
 ) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor]:
-    logit_samples = torch.randn(
-        mean.shape[0],
-        num_mc_samples,
-        mean.shape[1],
-        dtype=mean.dtype,
-        device=mean.device,
-    ) * var.sqrt().unsqueeze(1) + mean.unsqueeze(1)
+    logit_samples = sample_from_gaussian(mean, var, num_mc_samples)
 
     prob_mean = logit_samples.softmax(dim=-1).mean(dim=1)
 
@@ -77,13 +115,7 @@ def logit_link_mc(
     *,
     return_samples: bool = False,
 ) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor]:
-    logit_samples = torch.randn(
-        mean.shape[0],
-        num_mc_samples,
-        mean.shape[1],
-        dtype=mean.dtype,
-        device=mean.device,
-    ) * var.sqrt().unsqueeze(1) + mean.unsqueeze(1)
+    logit_samples = sample_from_gaussian(mean, var, num_mc_samples)
     prob = F.sigmoid(logit_samples)
     prob = prob / prob.sum(dim=-1, keepdim=True)
 
@@ -198,13 +230,7 @@ def probit_link_mc(
     approximate: bool,
     return_samples: bool = False,
 ) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor]:
-    logit_samples = torch.randn(
-        mean.shape[0],
-        num_mc_samples,
-        mean.shape[1],
-        dtype=mean.dtype,
-        device=mean.device,
-    ) * var.sqrt().unsqueeze(1) + mean.unsqueeze(1)
+    logit_samples = sample_from_gaussian(mean, var, num_mc_samples)
 
     ndtr_fn = ndtr_approx if approximate else ndtr
     prob = ndtr_fn(logit_samples.double()).float()
