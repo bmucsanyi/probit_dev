@@ -1173,7 +1173,7 @@ def get_bundle(  # noqa: C901
         gt_aleatorics_bregman = None
 
     link = args.predictive.split("_")[0]
-    is_distributional_het = isinstance(model, HETWrapper) and not args.use_sampling
+    is_distributional_het = isinstance(model, HETWrapper)
     is_distributional = is_distributional_het or isinstance(
         model,
         SNGPWrapper

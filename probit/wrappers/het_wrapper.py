@@ -21,12 +21,10 @@ class HETHead(nn.Module):
         num_classes,
         temperature,
         classifier,
-        use_sampling,
     ):
         super().__init__()
         self._matrix_rank = matrix_rank
         self._num_mc_samples = num_mc_samples
-        self._use_sampling = use_sampling
         self._num_features = num_features
         self._num_classes = num_classes
 
@@ -45,9 +43,7 @@ class HETHead(nn.Module):
 
     def forward(self, features):
         # Shape variables
-        B = features.shape[0]
         C = self._num_classes
-        S = self._num_mc_samples
         R = self._matrix_rank
 
         if R > 0:
@@ -58,26 +54,6 @@ class HETHead(nn.Module):
         diagonal_var = (
             F.softplus(self._diagonal_var_layer(features)) + self._min_scale_monte_carlo
         )  # [B, C]
-
-        if self._use_sampling:
-            diagonal_samples = diagonal_var.sqrt().unsqueeze(1) * torch.randn(
-                B, S, C, device=features.device
-            )  # [B, S, C]
-
-            if R > 0:
-                standard_samples = torch.randn(
-                    B, S, R, device=features.device
-                )  # [B, S, R]
-                einsum_res = torch.einsum(
-                    "bcr,bsr->bsc", low_rank_cov, standard_samples
-                )  # [B, S, C]
-                samples = einsum_res + diagonal_samples  # [B, S, C]
-            else:
-                samples = diagonal_samples
-
-            logits = self._classifier(features).unsqueeze(1) + samples  # [B, S, C]
-
-            return (logits / self._temperature,)
 
         if R > 0:
             # Compute full covariance matrix: Cov = L @ L^T + D
@@ -104,14 +80,12 @@ class HETWrapper(DistributionalWrapper):
         matrix_rank: int,
         num_mc_samples: int,
         temperature: float,
-        use_sampling: bool,
     ):
         super().__init__(model)
 
         self._matrix_rank = matrix_rank
         self._num_mc_samples = num_mc_samples
         self._temperature = temperature
-        self._use_sampling = use_sampling
 
         self._classifier = HETHead(
             matrix_rank=self._matrix_rank,
@@ -120,7 +94,6 @@ class HETWrapper(DistributionalWrapper):
             num_classes=self.num_classes,
             temperature=self._temperature,
             classifier=self.model.get_classifier(),
-            use_sampling=self._use_sampling,
         )
 
     def get_classifier(self):
@@ -131,7 +104,6 @@ class HETWrapper(DistributionalWrapper):
         matrix_rank: int | None = None,
         num_mc_samples: int | None = None,
         temperature: float | None = None,
-        use_sampling: bool | None = None,
         *args,
         **kwargs,
     ):
@@ -144,9 +116,6 @@ class HETWrapper(DistributionalWrapper):
         if temperature is not None:
             self._temperature = temperature
 
-        if use_sampling is not None:
-            self._use_sampling = use_sampling
-
         self.model.reset_classifier(*args, **kwargs)
         self._classifier = HETHead(
             matrix_rank=self._matrix_rank,
@@ -155,5 +124,4 @@ class HETWrapper(DistributionalWrapper):
             num_classes=self.num_classes,
             temperature=self._temperature,
             classifier=self.model.get_classifier(),
-            use_sampling=self._use_sampling,
         )

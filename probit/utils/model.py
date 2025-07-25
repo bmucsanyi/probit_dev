@@ -128,7 +128,6 @@ def wrap_model(
     num_mc_samples,
     matrix_rank,
     last_layer_name,
-    use_sampling,
     temperature,
     use_low_rank_cov,
     max_rank,
@@ -169,7 +168,6 @@ def wrap_model(
             matrix_rank=matrix_rank,
             num_mc_samples=num_mc_samples,
             temperature=temperature,
-            use_sampling=use_sampling,
         )
     elif model_wrapper_name == "laplace":
         wrapped_model = CovariancePushforwardLLLaplaceWrapper(
@@ -198,10 +196,7 @@ def wrap_model(
             "use_low_rank_cov": use_low_rank_cov,
             "max_rank": max_rank,
         }
-        if use_sampling:
-            wrapped_model = SWAGWrapper(**kwargs)
-        else:
-            wrapped_model = LinearizedSWAGWrapper(**kwargs)
+        wrapped_model = LinearizedSWAGWrapper(**kwargs)
     elif model_wrapper_name == "edl":
         wrapped_model = EDLWrapper(model=model, activation=edl_activation)
     elif model_wrapper_name == "postnet":

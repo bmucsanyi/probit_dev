@@ -417,7 +417,6 @@ def main():
         num_mc_samples=args.num_mc_samples,
         matrix_rank=args.matrix_rank,
         last_layer_name=args.last_layer_name,
-        use_sampling=args.use_sampling,
         temperature=args.temperature,
         use_low_rank_cov=args.use_low_rank_cov,
         max_rank=args.max_rank,
