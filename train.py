@@ -411,8 +411,6 @@ def main():
         matrix_rank=args.matrix_rank,
         last_layer_name=args.last_layer_name,
         temperature=args.temperature,
-        use_low_rank_cov=args.use_low_rank_cov,
-        max_rank=args.max_rank,
         use_spectral_normalization=args.use_spectral_normalization,
         spectral_normalization_iteration=args.spectral_normalization_iteration,
         spectral_normalization_bound=args.spectral_normalization_bound,

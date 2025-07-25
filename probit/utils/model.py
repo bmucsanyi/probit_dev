@@ -127,8 +127,6 @@ def wrap_model(
     matrix_rank,
     last_layer_name,
     temperature,
-    use_low_rank_cov,
-    max_rank,
     use_spectral_normalization,
     spectral_normalization_iteration,
     spectral_normalization_bound,
