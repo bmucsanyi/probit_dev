@@ -1471,18 +1471,12 @@ def convert_inference_res(inference_res, time_forward, args):  # noqa: C901
         converted_inference_res["logit_means"] = mean.mean(dim=-1)
         converted_inference_res["logit_stds"] = mean.std(dim=-1)
 
-        # TODO(bmucsanyi): This is wrong, it only applies e.g. softmax
-        # and not the predictive (like scaling of logits with mean field).
-        if "softmax" not in args.predictive:
-            act_fn = get_activation(
-                args.predictive, args.approximate, unnormalized=True
-            )
-            converted_inference_res["norm_factors"] = act_fn(mean).sum(dim=-1)
+        # Normalization factors will be computed per predictive method below
 
         link = args.predictive.split("_")[0]
         if link == "log":
             suffixes = ["link", "link_mc"]
-        if link == "softmax":
+        elif link == "softmax":
             suffixes = ["laplace_bridge", "mean_field", "mc"]
         elif link == "probit":
             suffixes = ["link_normcdf_output", "link_mc"]
@@ -1517,6 +1511,15 @@ def convert_inference_res(inference_res, time_forward, args):  # noqa: C901
                 log_act_fn = get_log_activation(args.predictive, args.approximate)
                 log_bma = log_act_fn(logit)
                 handle_bma(log_bma, converted_inference_res, suffix)
+
+                # Compute normalization factors for the main non-MC method
+                if link != "softmax" and suffix == suffixes[0]:
+                    unnormalized_act_fn = get_activation(
+                        predictive_name, args.approximate, unnormalized=True
+                    )
+                    converted_inference_res["norm_factors"] = (
+                        unnormalized_act_fn(logit).sum(dim=-1)
+                    )
 
         for suffix in suffixes:
             if suffix.endswith("mc") or (
