@@ -1441,7 +1441,7 @@ def convert_inference_res(inference_res, time_forward, args):  # noqa: C901
 
         is_het_with_rank = args.method_name == "het" and args.matrix_rank > 0
 
-        if args.method_name == "laplace-full" or is_het_with_rank:
+        if (args.method_name == "laplace-full" or is_het_with_rank) and not args.predictive.startswith("softmax"):
             act_fn = get_activation(
                 args.predictive, args.approximate, unnormalized=True
             )

@@ -20,7 +20,8 @@ class RegularizedUCELoss(nn.Module):
 
         self.regularization_factor = regularization_factor
 
-    def forward(self, alphas: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
+    def forward(self, alphas: tuple[torch.Tensor], targets: torch.Tensor) -> torch.Tensor:
+        alphas = alphas[0]
         targets_one_hot = F.one_hot(targets, num_classes=alphas.shape[1])  # [B, C]
 
         sum_alphas = alphas.sum(dim=1)  # [B]
