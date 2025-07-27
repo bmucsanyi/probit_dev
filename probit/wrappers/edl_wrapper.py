@@ -1,19 +1,24 @@
 """EDL model wrapper class."""
 
 import torch.nn.functional as F
-from torch import nn
+from torch import Tensor, nn
 
 from probit.wrappers.model_wrapper import DirichletWrapper
 
 
 class EDLWrapper(DirichletWrapper):
-    """This module takes a model as input and creates an EDL model from it."""
+    """Wrapper that creates an EDL model from an input model.
+
+    Args:
+        model: The base model to be wrapped.
+        activation: Activation function to use ('exp' or 'softplus').
+    """
 
     def __init__(
         self,
         model: nn.Module,
         activation: str,
-    ):
+    ) -> None:
         super().__init__(model)
 
         if activation == "exp":
